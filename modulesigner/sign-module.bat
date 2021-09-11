@@ -1,0 +1,1 @@
+java -jar module-signer.jar -keystore=cert.pfx -keystore-pwd=password -alias=cert -alias-pwd=password -chain=cert.p7b -module-in=PerspectiveComponents-unsigned.modl -module-out=PerspectiveComponents-signed.modl

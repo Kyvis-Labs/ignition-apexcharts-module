@@ -1,0 +1,48 @@
+{
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+    ],
+    "properties": {
+        "type": {
+            "type": "string",
+            "enum": [
+                "line",
+                "area",
+                "bar",
+                "radar",
+                "histogram",
+                "pie",
+                "donut",
+                "radialBar",
+                "scatter",
+                "bubble",
+                "heatmap",
+                "candlestick",
+                "polarArea",
+                "rangeBar",
+                "treemap"
+            ],
+            "description": "The ApexChart type",
+            "default": "line"
+        },
+        "options": {
+            "type": "object",
+            "description": "The Apex Chart options",
+            "default": {
+            }
+        },
+        "series": {
+            "type": "array",
+            "description": "The ApexChart series",
+            "default": [
+            ]
+        },
+        "style": {
+            "$ref": "urn:ignition-schema:schemas/style-properties.schema.json",
+            "default": {
+                "classes": ""
+            }
+        }
+    }
+}
