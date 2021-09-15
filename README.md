@@ -12,7 +12,7 @@ The ApexCharts module is an open source project distributed under the Apache 2.0
 Getting Started
 ---------------
 
-1. Download the latest version module (.modl) from [releases](https://github.com/kyvislabs)
+1. Download the latest version module (.modl) from [releases](https://github.com/Kyvis-Labs/ignition-apexcharts-module/releases)
 2. Install the module into Ignition 8.1+
 3. Open the designer and drag the ApexCharts component onto a Perspective view. The module provides 3 variations to show examples of creating a line chart, pie chart, and radar chart.
 4. Manipulate the component's properties to select and configure the ApexChart you want. Read the documentation below for more information on the property model.
