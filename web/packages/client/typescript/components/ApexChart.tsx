@@ -21,6 +21,204 @@ export interface ApexChartProps {
 
 export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
 
+    constructor(props: ComponentProps<ApexChartProps>) {
+        super(props);
+
+        this.state = {
+            options: {
+                ...this.prepareOptions(props.props.options)
+            },
+            series: this.prepareSeries(props.props.type, props.props.series),
+            type: props.props.type
+        };
+    }
+
+    componentDidMount() {
+        const {
+            props: {
+                type,
+                series,
+                options
+            }
+        } = this.props;
+
+        this.setState({
+            options: {
+                ...this.prepareOptions(options)
+            },
+            series: this.prepareSeries(type, series),
+            type: type
+        });
+    }
+
+    componentDidUpdate(prevProps: ComponentProps<ApexChartProps>) {
+        const {
+            props: {
+                type,
+                series,
+                options
+            }
+        } = this.props;
+
+        if (this.props.props.type !== prevProps.props.type) {
+            this.setState({
+                type: type
+            });
+        }
+
+        if (this.props.props.options !== prevProps.props.options) {
+            this.setState({
+                options: {
+                    ...this.prepareOptions(options)
+                }
+            });
+        }
+
+        if (this.props.props.series !== prevProps.props.series) {
+            this.setState({
+                series: this.prepareSeries(type, series)
+            });
+        }
+    }
+
+    @bind
+    prepareOptions(options) {
+        objectScan(['**'], {
+            filterFn: ({ parent, property, value }) => {
+                if (typeof value === 'string' && value && value.startsWith("function (")) {
+                    parent[property] = new Function("return " + value)();
+                }
+            }
+        })(options);
+
+        if (options.chart && options.chart.events) {
+            if (options.chart.events.animationEnd) {
+                options.chart.events.animationEnd = this.animationEndHandler;
+            } else {
+                options.chart.events.animationEnd = undefined;
+            }
+
+            if (options.chart.events.beforeMount) {
+                options.chart.events.beforeMount = this.beforeMountHandler;
+            } else {
+                options.chart.events.beforeMount = undefined;
+            }
+
+            if (options.chart.events.mounted) {
+                options.chart.events.mounted = this.mountedHandler;
+            } else {
+                options.chart.events.mounted = undefined;
+            }
+
+            if (options.chart.events.updated) {
+                options.chart.events.updated = this.updatedHandler;
+            } else {
+                options.chart.events.updated = undefined;
+            }
+
+            if (options.chart.events.click) {
+                options.chart.events.click = this.clickHandler;
+            } else {
+                options.chart.events.click = undefined;
+            }
+
+            if (options.chart.events.mouseMove) {
+                options.chart.events.mouseMove = this.mouseMoveHandler;
+            } else {
+                options.chart.events.mouseMove = undefined;
+            }
+
+            if (options.chart.events.legendClick) {
+                options.chart.events.legendClick = this.legendClickHandler;
+            } else {
+                options.chart.events.legendClick = undefined;
+            }
+
+            if (options.chart.events.markerClick) {
+                options.chart.events.markerClick = this.markerClickHandler;
+            } else {
+                options.chart.events.markerClick = undefined;
+            }
+
+            if (options.chart.events.selection) {
+                options.chart.events.selection = this.selectionHandler;
+            } else {
+                options.chart.events.selection = undefined;
+            }
+
+            if (options.chart.events.dataPointSelection) {
+                options.chart.events.dataPointSelection = this.dataPointSelectionHandler;
+            } else {
+                options.chart.events.dataPointSelection = undefined;
+            }
+
+            if (options.chart.events.dataPointMouseEnter) {
+                options.chart.events.dataPointMouseEnter = this.dataPointMouseEnterHandler;
+            } else {
+                options.chart.events.dataPointMouseEnter = undefined;
+            }
+
+            if (options.chart.events.dataPointMouseLeave) {
+                options.chart.events.dataPointMouseLeave = this.dataPointMouseLeaveHandler;
+            } else {
+                options.chart.events.dataPointMouseLeave = undefined;
+            }
+
+            if (options.chart.events.zoomed) {
+                options.chart.events.zoomed = this.zoomedHandler;
+            } else {
+                options.chart.events.zoomed = undefined;
+            }
+
+            if (options.chart.events.scrolled) {
+                options.chart.events.scrolled = this.scrolledHandler;
+            } else {
+                options.chart.events.scrolled = undefined;
+            }
+
+            if (options.chart.events.brushScrolled) {
+                options.chart.events.brushScrolled = this.brushedScrolledHandler;
+            } else {
+                options.chart.events.brushScrolled = undefined;
+            }
+        }
+
+        return options;
+    }
+
+    @bind
+    prepareSeries(type, series) {
+        if (type !== "pie" && type !== "donut" && type !== "radialBar" && type !== "rangeBar"){
+            for (let s of series) {
+                if (typeof s.data === 'undefined' || s.data === null || typeof s.data === 'string' || typeof s.data === 'number' || typeof s.data === 'bigint' || typeof s.data === 'boolean' || typeof s.data === 'symbol' || typeof s.data === 'function') {
+                    s.data = [];
+                }
+
+                let hasObject: boolean = false;
+                for (let row of s.data) {
+                    if (row instanceof Object){
+                        hasObject = true;
+                    }
+                    break;
+                }
+
+                if (hasObject) {
+                    const newData: Array<any> = new Array<any>();
+                    for (let row of s.data) {
+                        if (row instanceof Object){
+                            newData.push(Object.values(row));
+                        } else {
+                            newData.push(row);
+                        }
+                    }
+                    s.data = newData;
+                }
+            }
+        }
+
+        return series;
+    }
+
     @bind
     animationEndHandler(chartContext, options) {
         const e = {
@@ -216,109 +414,17 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
     }
 
     render() {
-        const { props } = this.props;
-
-        objectScan(['**'], {
-            filterFn: ({ parent, property, value }) => {
-                if (typeof value === 'string' && value && value.startsWith("function (")) {
-                    parent[property] = new Function("return " + value)();
-                }
-            }
-        })(props.options);
-
-        if (props.options.chart && props.options.chart.events && props.options.chart.events.animationEnd) {
-            props.options.chart.events.animationEnd = this.animationEndHandler;
+        if (this.state.options && Object.keys(this.state.options).length === 0 && Object.getPrototypeOf(this.state.options) === Object.prototype) {
+            return (
+                <div {...this.props.emit()} />
+            );
+        } else {
+            return (
+                <div {...this.props.emit()}>
+                    <Chart options={this.state.options} series={this.state.series} type={this.state.type} width="100%" height="100%" />
+                </div>
+            );
         }
-
-        if (props.options.chart && props.options.chart.events && props.options.chart.events.beforeMount) {
-            props.options.chart.events.beforeMount = this.beforeMountHandler;
-        }
-
-        if (props.options.chart && props.options.chart.events && props.options.chart.events.mounted) {
-            props.options.chart.events.mounted = this.mountedHandler;
-        }
-
-        if (props.options.chart && props.options.chart.events && props.options.chart.events.updated) {
-            props.options.chart.events.updated = this.updatedHandler;
-        }
-
-        if (props.options.chart && props.options.chart.events && props.options.chart.events.click) {
-            props.options.chart.events.click = this.clickHandler;
-        }
-
-        if (props.options.chart && props.options.chart.events && props.options.chart.events.mouseMove) {
-            props.options.chart.events.mouseMove = this.mouseMoveHandler;
-        }
-
-        if (props.options.chart && props.options.chart.events && props.options.chart.events.legendClick) {
-            props.options.chart.events.legendClick = this.legendClickHandler;
-        }
-
-        if (props.options.chart && props.options.chart.events && props.options.chart.events.markerClick) {
-            props.options.chart.events.markerClick = this.markerClickHandler;
-        }
-
-        if (props.options.chart && props.options.chart.events && props.options.chart.events.selection) {
-            props.options.chart.events.selection = this.selectionHandler;
-        }
-
-        if (props.options.chart && props.options.chart.events && props.options.chart.events.dataPointSelection) {
-            props.options.chart.events.dataPointSelection = this.dataPointSelectionHandler;
-        }
-
-        if (props.options.chart && props.options.chart.events && props.options.chart.events.dataPointMouseEnter) {
-            props.options.chart.events.dataPointMouseEnter = this.dataPointMouseEnterHandler;
-        }
-
-        if (props.options.chart && props.options.chart.events && props.options.chart.events.dataPointMouseLeave) {
-            props.options.chart.events.dataPointMouseLeave = this.dataPointMouseLeaveHandler;
-        }
-
-        if (props.options.chart && props.options.chart.events && props.options.chart.events.zoomed) {
-            props.options.chart.events.zoomed = this.zoomedHandler;
-        }
-
-        if (props.options.chart && props.options.chart.events && props.options.chart.events.scrolled) {
-            props.options.chart.events.scrolled = this.scrolledHandler;
-        }
-
-        if (props.options.chart && props.options.chart.events && props.options.chart.events.brushScrolled) {
-            props.options.chart.events.brushScrolled = this.brushedScrolledHandler;
-        }
-
-        if (props.type !== "pie" && props.type !== "donut" && props.type !== "radialBar"){
-            for (let series of props.series) {
-                if (typeof series.data === 'undefined' || series.data === null || typeof series.data === 'string' || typeof series.data === 'number' || typeof series.data === 'bigint' || typeof series.data === 'boolean' || typeof series.data === 'symbol' || typeof series.data === 'function') {
-                    series.data = [];
-                }
-
-                let hasObject: boolean = false;
-                for (let row of series.data) {
-                    if (row instanceof Object){
-                        hasObject = true;
-                    }
-                    break;
-                }
-
-                if (hasObject) {
-                    const newData: Array<any> = new Array<any>();
-                    for (let row of series.data) {
-                        if (row instanceof Object){
-                            newData.push(Object.values(row));
-                        } else {
-                            newData.push(row);
-                        }
-                    }
-                    series.data = newData;
-                }
-            }
-        }
-
-        return (
-            <div {...this.props.emit()}>
-                <Chart options={props.options} series={props.series} type={props.type} width="100%" height="100%" />
-            </div>
-        );
     }
 }
 
