@@ -188,7 +188,7 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
 
     @bind
     prepareSeries(type, series) {
-        if (type !== "pie" && type !== "donut" && type !== "radialBar" && type !== "rangeBar" && type !== "polarArea"){
+        if (type !== "pie" && type !== "donut" && type !== "radialBar" && type !== "rangeBar" && type !== "polarArea" && type !== "treemap"){
             for (let s of series) {
                 if (typeof s.data === 'undefined' || s.data === null || typeof s.data === 'string' || typeof s.data === 'number' || typeof s.data === 'bigint' || typeof s.data === 'boolean' || typeof s.data === 'symbol' || typeof s.data === 'function') {
                     s.data = [];
