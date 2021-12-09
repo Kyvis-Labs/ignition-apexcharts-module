@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { RefObject } from "react";
 import {
     Component,
     ComponentMeta,
@@ -8,8 +9,8 @@ import {
     SizeObject
 } from '@inductiveautomation/perspective-client';
 import { bind } from 'bind-decorator';
-import Chart from 'react-apexcharts';
 const objectScan = require('object-scan');
+import ApexCharts from 'apexcharts/dist/apexcharts.common';
 
 export const COMPONENT_TYPE = "kyvislabs.display.apexchart";
 
@@ -21,71 +22,69 @@ export interface ApexChartProps {
 
 export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
 
-    constructor(props: ComponentProps<ApexChartProps>) {
-        super(props);
+    private chartRef: RefObject<HTMLDivElement> = React.createRef();
+    private chart: ApexCharts = null;
 
-        this.state = {
-            options: {
-                ...this.prepareOptions(props.props.options)
-            },
-            series: this.prepareSeries(props.props.type, props.props.series),
-            type: props.props.type
-        };
+    componentDidMount () {
+        this.chart = new ApexCharts(this.chartRef.current, this.getConfig());
+        this.chart.render();
     }
 
-    componentDidMount() {
-        const {
-            props: {
-                type,
-                series,
-                options
-            }
-        } = this.props;
+    componentDidUpdate (prevProps) {
+        if (!this.chart) {
+            return null;
+        }
 
-        this.setState({
-            options: {
-                ...this.prepareOptions(options)
-            },
-            series: this.prepareSeries(type, series),
-            type: type
-        });
+        const prevOptions = JSON.stringify(prevProps.props.options);
+        const prevSeries = JSON.stringify(prevProps.props.series);
+        const currentOptions = JSON.stringify(this.props.props.options);
+        const currentSeries = JSON.stringify(this.props.props.series);
+
+        if (prevOptions !== currentOptions || prevSeries !== currentSeries) {
+            if (prevOptions === currentOptions) {
+                // options are not changed, just the series is changed
+                this.chart.updateSeries(this.prepareSeries(this.props.props.type, this.props.props.series));
+            } else {
+                // both might be changed
+                console.log("destroying ApexCharts reference");
+                this.chart.destroy();
+
+                this.chart = new ApexCharts(this.chartRef.current, this.getConfig());
+                this.chart.render();
+            }
+        }
     }
 
-    componentDidUpdate(prevProps: ComponentProps<ApexChartProps>) {
-        const {
-            props: {
-                type,
-                series,
-                options
-            }
-        } = this.props;
+    componentWillUnmount () {
+        if (this.chart && typeof this.chart.destroy === 'function') {
+            this.chart.destroy();
+        }
+    }
 
-        if (this.props.props.type !== prevProps.props.type) {
-            this.setState({
-                type: type
-            });
+    getConfig () {
+        const newOptions = this.prepareOptions(JSON.parse(JSON.stringify(this.props.props.options)));
+
+        if (newOptions.chart) {
+            newOptions.chart.type = this.props.props.type;
+            newOptions.chart.height = "100%";
+            newOptions.chart.width = "100%";
+        } else {
+            newOptions.chart = {
+                type: this.props.props.type,
+                height: "100%",
+                width: "100%"
+            };
         }
 
-        if (this.props.props.options !== prevProps.props.options) {
-            this.setState({
-                options: {
-                    ...this.prepareOptions(options)
-                }
-            });
-        }
-
-        if (this.props.props.series !== prevProps.props.series) {
-            this.setState({
-                series: this.prepareSeries(type, series)
-            });
-        }
+        newOptions.series = this.prepareSeries(this.props.props.type, this.props.props.series);
+        return newOptions;
     }
 
     @bind
     prepareOptions(options) {
         objectScan(['**'], {
             filterFn: ({ parent, property, value }) => {
-                if (typeof value === 'string' && value && value.startsWith("function (")) {
+                if (typeof value === 'string' && value && (value.startsWith("function (") || value.startsWith("function("))) {
                     parent[property] = new Function("return " + value)();
                 }
             }
@@ -194,24 +193,31 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
                     s.data = [];
                 }
 
-                let hasObject: boolean = false;
-                for (let row of s.data) {
-                    if (row instanceof Object){
-                        hasObject = true;
-                    }
-                    break;
-                }
-
-                if (hasObject) {
-                    const newData: Array<any> = new Array<any>();
+                if (type !== "treemap"){
+                    let hasObject: boolean = false;
                     for (let row of s.data) {
                         if (row instanceof Object){
-                            newData.push(Object.values(row));
-                        } else {
-                            newData.push(row);
+                            hasObject = true;
                         }
+                        break;
                     }
-                    s.data = newData;
+
+                    if (hasObject) {
+                        const newData: Array<any> = new Array<any>();
+                        for (let row of s.data) {
+                            if (row instanceof Object){
+                                let rowData: Array<any> = Object.values(row);
+                                if (rowData.length == 1){
+                                    newData.push(rowData[0]);
+                                } else {
+                                    newData.push(rowData);
+                                }
+                            } else {
+                                newData.push(row);
+                            }
+                        }
+                        s.data = newData;
+                    }
                 }
             }
         }
@@ -414,14 +420,14 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
     }
 
     render() {
-        if (this.state.options && Object.keys(this.state.options).length === 0 && Object.getPrototypeOf(this.state.options) === Object.prototype) {
+        if (this.props.props.options && Object.keys(this.props.props.options).length === 0 && Object.getPrototypeOf(this.props.props.options) === Object.prototype) {
             return (
                 <div {...this.props.emit()} />
             );
         } else {
             return (
                 <div {...this.props.emit()}>
-                    <Chart options={this.state.options} series={this.state.series} type={this.state.type} width="100%" height="100%" />
+                   <div ref={this.chartRef} />
                 </div>
             );
         }

@@ -19,7 +19,6 @@
         "react": "16.8.4",
         "react-dom": "16.8.4",
         "apexcharts": "3.28.3",
-        "react-apexcharts": "1.3.9",
         "object-scan": "13.9.0"
     },
     "devDependencies": {
