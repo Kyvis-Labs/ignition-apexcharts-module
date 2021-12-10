@@ -3049,7 +3049,6 @@ class ApexChart extends perspective_client_1.Component {
             }
             else {
                 // both might be changed
-                console.log("destroying ApexCharts reference");
                 this.chart.destroy();
                 this.chart = new apexcharts_common_1.default(this.chartRef.current, this.getConfig());
                 this.chart.render();
