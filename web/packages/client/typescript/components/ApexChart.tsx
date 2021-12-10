@@ -24,6 +24,7 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
 
     private chartRef: RefObject<HTMLDivElement> = React.createRef();
     private chart: ApexCharts = null;
+    private lastZoom: Array<any> = [];
 
     componentDidMount () {
         this.chart = new ApexCharts(this.chartRef.current, this.getConfig());
@@ -44,11 +45,13 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
             if (prevOptions === currentOptions) {
                 // options are not changed, just the series is changed
                 this.chart.updateSeries(this.prepareSeries(this.props.props.type, this.props.props.series));
+
+                if (this.lastZoom.length > 0) {
+                    this.chart.zoomX(this.lastZoom[0], this.lastZoom[1]);
+                }
             } else {
                 // both might be changed
-                console.log("destroying ApexCharts reference");
                 this.chart.destroy();
-
                 this.chart = new ApexCharts(this.chartRef.current, this.getConfig());
                 this.chart.render();
             }
@@ -163,11 +166,8 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
                 options.chart.events.dataPointMouseLeave = undefined;
             }
 
-            if (options.chart.events.zoomed) {
-                options.chart.events.zoomed = this.zoomedHandler;
-            } else {
-                options.chart.events.zoomed = undefined;
-            }
+            options.chart.events.zoomed = this.zoomedHandler;
+            options.chart.events.beforeResetZoom = this.beforeResetZoomHandler;
 
             if (options.chart.events.scrolled) {
                 options.chart.events.scrolled = this.scrolledHandler;
@@ -387,14 +387,23 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
     }
 
     @bind
+    beforeResetZoomHandler(chartContext, opts) {
+        this.lastZoom = [];
+    }
+
+    @bind
     zoomedHandler(chartContext, { xaxis, yaxis }) {
-        const e = {
-            xaxis: {
-                min: xaxis.min,
-                max: xaxis.max
-            }
-        };
-        this.props.componentEvents.fireComponentEvent("zoomedHandler", e);
+        this.lastZoom = [xaxis.min, xaxis.max];
+
+        if (this.props.props.options.chart.events.zoomed) {
+            const e = {
+                xaxis: {
+                    min: xaxis.min,
+                    max: xaxis.max
+                }
+            };
+            this.props.componentEvents.fireComponentEvent("zoomedHandler", e);
+        }
     }
 
     @bind

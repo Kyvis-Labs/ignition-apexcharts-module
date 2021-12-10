@@ -3025,6 +3025,7 @@ class ApexChart extends perspective_client_1.Component {
         super(...arguments);
         this.chartRef = React.createRef();
         this.chart = null;
+        this.lastZoom = [];
     }
     componentDidMount() {
         this.chart = new apexcharts_common_1.default(this.chartRef.current, this.getConfig());
@@ -3042,6 +3043,9 @@ class ApexChart extends perspective_client_1.Component {
             if (prevOptions === currentOptions) {
                 // options are not changed, just the series is changed
                 this.chart.updateSeries(this.prepareSeries(this.props.props.type, this.props.props.series));
+                if (this.lastZoom.length > 0) {
+                    this.chart.zoomX(this.lastZoom[0], this.lastZoom[1]);
+                }
             }
             else {
                 // both might be changed
@@ -3155,12 +3159,8 @@ class ApexChart extends perspective_client_1.Component {
             else {
                 options.chart.events.dataPointMouseLeave = undefined;
             }
-            if (options.chart.events.zoomed) {
-                options.chart.events.zoomed = this.zoomedHandler;
-            }
-            else {
-                options.chart.events.zoomed = undefined;
-            }
+            options.chart.events.zoomed = this.zoomedHandler;
+            options.chart.events.beforeResetZoom = this.beforeResetZoomHandler;
             if (options.chart.events.scrolled) {
                 options.chart.events.scrolled = this.scrolledHandler;
             }
@@ -3346,14 +3346,20 @@ class ApexChart extends perspective_client_1.Component {
         };
         this.props.componentEvents.fireComponentEvent("dataPointMouseLeaveHandler", e);
     }
+    beforeResetZoomHandler(chartContext, opts) {
+        this.lastZoom = [];
+    }
     zoomedHandler(chartContext, { xaxis, yaxis }) {
-        const e = {
-            xaxis: {
-                min: xaxis.min,
-                max: xaxis.max
-            }
-        };
-        this.props.componentEvents.fireComponentEvent("zoomedHandler", e);
+        this.lastZoom = [xaxis.min, xaxis.max];
+        if (this.props.props.options.chart.events.zoomed) {
+            const e = {
+                xaxis: {
+                    min: xaxis.min,
+                    max: xaxis.max
+                }
+            };
+            this.props.componentEvents.fireComponentEvent("zoomedHandler", e);
+        }
     }
     scrolledHandler(chartContext, { xaxis }) {
         const e = {
@@ -3467,6 +3473,12 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object, Object]),
     __metadata("design:returntype", void 0)
 ], ApexChart.prototype, "dataPointMouseLeaveHandler", null);
+__decorate([
+    bind_decorator_1.bind,
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], ApexChart.prototype, "beforeResetZoomHandler", null);
 __decorate([
     bind_decorator_1.bind,
     __metadata("design:type", Function),
