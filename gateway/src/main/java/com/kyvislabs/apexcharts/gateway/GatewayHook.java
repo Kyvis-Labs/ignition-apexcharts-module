@@ -1,7 +1,5 @@
 package com.kyvislabs.apexcharts.gateway;
 
-import com.kyvislabs.apexcharts.common.Components;
-import com.kyvislabs.apexcharts.common.component.display.ApexChart;
 import com.inductiveautomation.ignition.common.licensing.LicenseState;
 import com.inductiveautomation.ignition.common.util.LoggerEx;
 import com.inductiveautomation.ignition.gateway.model.AbstractGatewayModuleHook;
@@ -9,6 +7,8 @@ import com.inductiveautomation.ignition.gateway.model.GatewayContext;
 import com.inductiveautomation.perspective.common.api.ComponentRegistry;
 import com.inductiveautomation.perspective.gateway.api.ComponentModelDelegateRegistry;
 import com.inductiveautomation.perspective.gateway.api.PerspectiveContext;
+import com.kyvislabs.apexcharts.common.Components;
+import com.kyvislabs.apexcharts.common.component.display.ApexChart;
 
 import java.util.Optional;
 
@@ -41,6 +41,11 @@ public class GatewayHook extends AbstractGatewayModuleHook {
         } else {
             log.error("Reference to component registry not found, Components will fail to function!");
         }
+
+        if (this.modelDelegateRegistry != null) {
+            log.info("Registering model delegates.");
+            this.modelDelegateRegistry.register(ApexChart.COMPONENT_ID, ApexChartModelDelegate::new);
+        }
     }
 
     @Override
@@ -50,6 +55,10 @@ public class GatewayHook extends AbstractGatewayModuleHook {
             this.componentRegistry.removeComponent(ApexChart.COMPONENT_ID);
         } else {
             log.warn("Component registry was null, could not unregister Components.");
+        }
+
+        if (this.modelDelegateRegistry != null) {
+            this.modelDelegateRegistry.remove(ApexChart.COMPONENT_ID);
         }
     }
 

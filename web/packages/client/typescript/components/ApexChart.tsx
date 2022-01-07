@@ -1,12 +1,16 @@
 import * as React from 'react';
 import { RefObject } from "react";
 import {
+    AbstractUIElementStore,
     Component,
     ComponentMeta,
     ComponentProps,
+    ComponentStoreDelegate,
+    makeLogger,
     PComponent,
     PropertyTree,
-    SizeObject
+    SizeObject,
+    PlainObject
 } from '@inductiveautomation/perspective-client';
 import { bind } from 'bind-decorator';
 const objectScan = require('object-scan');
@@ -14,10 +18,54 @@ import ApexCharts from 'apexcharts/dist/apexcharts.common';
 
 export const COMPONENT_TYPE = "kyvislabs.display.apexchart";
 
+const logger = makeLogger(COMPONENT_TYPE);
+
 export interface ApexChartProps {
     type: any;
     options: any;
     series: Array<any>;
+}
+
+// These match events in the Gateway side component delegate.
+enum MessageEvents {
+    MESSAGE_RESPONSE_EVENT = "apexchart-response-event"
+}
+
+export class ApexChartGatewayDelegate extends ComponentStoreDelegate {
+    private chart: ApexCharts | null = null;
+
+    constructor(componentStore: AbstractUIElementStore) {
+        super(componentStore);
+    }
+
+    @bind
+    init(chart: ApexCharts) {
+        if (chart) {
+            this.chart = chart;
+        }
+    }
+
+    @bind
+    handleEvent(eventName: string, eventObject: PlainObject): void {
+        if (this.chart) {
+            logger.debug(() => `Received '${eventName}' event!`);
+            const {
+                MESSAGE_RESPONSE_EVENT
+            } = MessageEvents;
+
+            const {
+                seriesName
+            } = eventObject;
+
+            switch (eventName) {
+                case MESSAGE_RESPONSE_EVENT:
+                    this.chart.toggleSeries(seriesName);
+                    break;
+                default:
+                    logger.warn(() => `No delegate event handler found for event: ${eventName} in ApexChartGatewayDelegate`);
+            }
+        }
+    }
 }
 
 export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
@@ -28,7 +76,14 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
 
     componentDidMount () {
         this.chart = new ApexCharts(this.chartRef.current, this.getConfig());
+        this.initDelegate();
         this.chart.render();
+    }
+
+    initDelegate() {
+        if (this.props.store.delegate) {
+            (this.props.store.delegate as ApexChartGatewayDelegate).init(this.chart);
+        }
     }
 
     componentDidUpdate (prevProps) {
@@ -51,8 +106,10 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
                 }
             } else {
                 // both might be changed
+                logger.debug(() => `Destroying chart`);
                 this.chart.destroy();
                 this.chart = new ApexCharts(this.chartRef.current, this.getConfig());
+                this.initDelegate();
                 this.chart.render();
             }
         }
@@ -106,11 +163,7 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
                 options.chart.events.beforeMount = undefined;
             }
 
-            if (options.chart.events.mounted) {
-                options.chart.events.mounted = this.mountedHandler;
-            } else {
-                options.chart.events.mounted = undefined;
-            }
+            options.chart.events.mounted = this.mountedHandler;
 
             if (options.chart.events.updated) {
                 options.chart.events.updated = this.updatedHandler;
@@ -241,9 +294,15 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
 
     @bind
     mountedHandler(chartContext, config) {
-        const e = {
-        };
-        this.props.componentEvents.fireComponentEvent("mountedHandler", e);
+        if (this.chart) {
+            this.chart.windowResizeHandler();
+        }
+
+        if (this.props.props.options.chart.events.mounted) {
+            const e = {
+            };
+            this.props.componentEvents.fireComponentEvent("mountedHandler", e);
+        }
     }
 
     @bind
@@ -458,6 +517,10 @@ export class ApexChartMeta implements ComponentMeta {
             width: 475,
             height: 200
         });
+    }
+
+    createDelegate(component: AbstractUIElementStore): ComponentStoreDelegate | undefined {
+        return new ApexChartGatewayDelegate(component);
     }
 
     getPropsReducer(tree: PropertyTree): ApexChartProps {

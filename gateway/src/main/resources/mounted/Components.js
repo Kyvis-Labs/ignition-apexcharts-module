@@ -3013,6 +3013,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __importStar(__webpack_require__(/*! react */ "react"));
 const perspective_client_1 = __webpack_require__(/*! @inductiveautomation/perspective-client */ "@inductiveautomation/perspective-client");
@@ -3020,6 +3021,50 @@ const bind_decorator_1 = __webpack_require__(/*! bind-decorator */ "../../node_m
 const objectScan = __webpack_require__(/*! object-scan */ "../../node_modules/object-scan/lib/index.js");
 const apexcharts_common_1 = __importDefault(__webpack_require__(/*! apexcharts/dist/apexcharts.common */ "../../node_modules/apexcharts/dist/apexcharts.common.js"));
 exports.COMPONENT_TYPE = "kyvislabs.display.apexchart";
+const logger = perspective_client_1.makeLogger(exports.COMPONENT_TYPE);
+// These match events in the Gateway side component delegate.
+var MessageEvents;
+(function (MessageEvents) {
+    MessageEvents["MESSAGE_RESPONSE_EVENT"] = "apexchart-response-event";
+})(MessageEvents || (MessageEvents = {}));
+class ApexChartGatewayDelegate extends perspective_client_1.ComponentStoreDelegate {
+    constructor(componentStore) {
+        super(componentStore);
+        this.chart = null;
+    }
+    init(chart) {
+        if (chart) {
+            this.chart = chart;
+        }
+    }
+    handleEvent(eventName, eventObject) {
+        if (this.chart) {
+            logger.debug(() => `Received '${eventName}' event!`);
+            const { MESSAGE_RESPONSE_EVENT } = MessageEvents;
+            const { seriesName } = eventObject;
+            switch (eventName) {
+                case MESSAGE_RESPONSE_EVENT:
+                    this.chart.toggleSeries(seriesName);
+                    break;
+                default:
+                    logger.warn(() => `No delegate event handler found for event: ${eventName} in ApexChartGatewayDelegate`);
+            }
+        }
+    }
+}
+__decorate([
+    bind_decorator_1.bind,
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_a = typeof apexcharts_common_1.default !== "undefined" && apexcharts_common_1.default) === "function" ? _a : Object]),
+    __metadata("design:returntype", void 0)
+], ApexChartGatewayDelegate.prototype, "init", null);
+__decorate([
+    bind_decorator_1.bind,
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], ApexChartGatewayDelegate.prototype, "handleEvent", null);
+exports.ApexChartGatewayDelegate = ApexChartGatewayDelegate;
 class ApexChart extends perspective_client_1.Component {
     constructor() {
         super(...arguments);
@@ -3029,7 +3074,13 @@ class ApexChart extends perspective_client_1.Component {
     }
     componentDidMount() {
         this.chart = new apexcharts_common_1.default(this.chartRef.current, this.getConfig());
+        this.initDelegate();
         this.chart.render();
+    }
+    initDelegate() {
+        if (this.props.store.delegate) {
+            this.props.store.delegate.init(this.chart);
+        }
     }
     componentDidUpdate(prevProps) {
         if (!this.chart) {
@@ -3049,8 +3100,10 @@ class ApexChart extends perspective_client_1.Component {
             }
             else {
                 // both might be changed
+                logger.debug(() => `Destroying chart`);
                 this.chart.destroy();
                 this.chart = new apexcharts_common_1.default(this.chartRef.current, this.getConfig());
+                this.initDelegate();
                 this.chart.render();
             }
         }
@@ -3098,12 +3151,7 @@ class ApexChart extends perspective_client_1.Component {
             else {
                 options.chart.events.beforeMount = undefined;
             }
-            if (options.chart.events.mounted) {
-                options.chart.events.mounted = this.mountedHandler;
-            }
-            else {
-                options.chart.events.mounted = undefined;
-            }
+            options.chart.events.mounted = this.mountedHandler;
             if (options.chart.events.updated) {
                 options.chart.events.updated = this.updatedHandler;
             }
@@ -3221,8 +3269,13 @@ class ApexChart extends perspective_client_1.Component {
         this.props.componentEvents.fireComponentEvent("beforeMountHandler", e);
     }
     mountedHandler(chartContext, config) {
-        const e = {};
-        this.props.componentEvents.fireComponentEvent("mountedHandler", e);
+        if (this.chart) {
+            this.chart.windowResizeHandler();
+        }
+        if (this.props.props.options.chart.events.mounted) {
+            const e = {};
+            this.props.componentEvents.fireComponentEvent("mountedHandler", e);
+        }
     }
     updatedHandler(chartContext, config) {
         const e = {};
@@ -3509,6 +3562,9 @@ class ApexChartMeta {
             width: 475,
             height: 200
         });
+    }
+    createDelegate(component) {
+        return new ApexChartGatewayDelegate(component);
     }
     getPropsReducer(tree) {
         return {

@@ -218,3 +218,15 @@ It is possible to leverage Perspective theme colors and fonts for the charts. Si
   ]
 }
 ```
+
+Component Scripting Functions
+---------------
+
+The Apex Chart component provides the following scripting functions you can interface with in Python:
+- toggleSeries(String seriesName)
+
+```json
+self.getSibling("apexchart").toggleSeries("SeriesA")
+```
+
+You can learn more about the toggleSeries function [here](https://apexcharts.com/docs/methods/#toggleSeries).
