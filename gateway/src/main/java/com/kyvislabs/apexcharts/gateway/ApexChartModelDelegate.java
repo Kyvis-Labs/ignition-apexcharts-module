@@ -10,8 +10,14 @@ import com.inductiveautomation.perspective.gateway.messages.EventFiredMsg;
 import org.python.core.Py;
 import org.python.core.PyObject;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class ApexChartModelDelegate extends ComponentModelDelegate {
     public static final String OUTBOUND_EVENT_NAME = "apexchart-response-event";
+    public static final String INBOUND_EVENT_NAME = "apexchart-request-event";
+
+    private AtomicBoolean toggleSeriesWaiting = new AtomicBoolean(false);
+    private AtomicBoolean toggleSeriesReturn = new AtomicBoolean(false);
 
     public ApexChartModelDelegate(Component component) {
         super(component);
@@ -32,7 +38,7 @@ public class ApexChartModelDelegate extends ComponentModelDelegate {
 
     @ScriptCallable
     @KeywordArgs(names = {"seriesName"}, types = {String.class})
-    public void toggleSeries(PyObject[] pyArgs, String[] keywords) {
+    public boolean toggleSeries(PyObject[] pyArgs, String[] keywords) throws Exception {
         PyArgumentMap argumentMap =
                 PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "toggleSeries");
         String seriesName = argumentMap.getStringArg("seriesName");
@@ -41,8 +47,60 @@ public class ApexChartModelDelegate extends ComponentModelDelegate {
             throw Py.ValueError("toggleSeries argument 'seriesName' cannot be None");
         }
 
+        toggleSeriesWaiting.set(true);
         log.debugf("Calling toggleSeries with '%s'", seriesName);
         JsonObject payload = new JsonObject();
+        payload.addProperty("functionToCall", "toggleSeries");
+        payload.addProperty("seriesName", seriesName);
+        fireEvent(OUTBOUND_EVENT_NAME, payload);
+
+        int maxTryCount = 20;
+        int tryCount = 0;
+        while (toggleSeriesWaiting.get()) {
+            tryCount += 1;
+            if (tryCount >= maxTryCount) {
+                toggleSeriesWaiting.set(false);
+                throw new Exception("No message received from ApexChart, failing");
+            }
+            Thread.sleep(100);
+        }
+
+        toggleSeriesWaiting.set(false);
+        return toggleSeriesReturn.get();
+    }
+
+    @ScriptCallable
+    @KeywordArgs(names = {"seriesName"}, types = {String.class})
+    public void showSeries(PyObject[] pyArgs, String[] keywords) throws Exception {
+        PyArgumentMap argumentMap =
+                PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "showSeries");
+        String seriesName = argumentMap.getStringArg("seriesName");
+
+        if (seriesName == null) {
+            throw Py.ValueError("showSeries argument 'seriesName' cannot be None");
+        }
+
+        log.debugf("Calling showSeries with '%s'", seriesName);
+        JsonObject payload = new JsonObject();
+        payload.addProperty("functionToCall", "showSeries");
+        payload.addProperty("seriesName", seriesName);
+        fireEvent(OUTBOUND_EVENT_NAME, payload);
+    }
+
+    @ScriptCallable
+    @KeywordArgs(names = {"seriesName"}, types = {String.class})
+    public void hideSeries(PyObject[] pyArgs, String[] keywords) throws Exception {
+        PyArgumentMap argumentMap =
+                PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "hideSeries");
+        String seriesName = argumentMap.getStringArg("seriesName");
+
+        if (seriesName == null) {
+            throw Py.ValueError("hideSeries argument 'seriesName' cannot be None");
+        }
+
+        log.debugf("Calling hideSeries with '%s'", seriesName);
+        JsonObject payload = new JsonObject();
+        payload.addProperty("functionToCall", "hideSeries");
         payload.addProperty("seriesName", seriesName);
         fireEvent(OUTBOUND_EVENT_NAME, payload);
     }
@@ -51,5 +109,11 @@ public class ApexChartModelDelegate extends ComponentModelDelegate {
     @Override
     public void handleEvent(EventFiredMsg message) {
         log.debugf("Received EventFiredMessage of type: %s", message.getEventName());
+
+        if (message.getEventName().equals(INBOUND_EVENT_NAME)) {
+            JsonObject payload = message.getEvent();
+            toggleSeriesReturn.set(payload.get("result").getAsBoolean());
+            toggleSeriesWaiting.set(false);
+        }
     }
 }

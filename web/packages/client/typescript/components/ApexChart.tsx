@@ -14,7 +14,7 @@ import {
 } from '@inductiveautomation/perspective-client';
 import { bind } from 'bind-decorator';
 const objectScan = require('object-scan');
-import ApexCharts from 'apexcharts/dist/apexcharts.common';
+import ApexCharts from 'apexcharts/dist/apexcharts.min';
 
 export const COMPONENT_TYPE = "kyvislabs.display.apexchart";
 
@@ -28,7 +28,8 @@ export interface ApexChartProps {
 
 // These match events in the Gateway side component delegate.
 enum MessageEvents {
-    MESSAGE_RESPONSE_EVENT = "apexchart-response-event"
+    MESSAGE_RESPONSE_EVENT = "apexchart-response-event",
+    MESSAGE_REQUEST_EVENT = "apexchart-request-event"
 }
 
 export class ApexChartGatewayDelegate extends ComponentStoreDelegate {
@@ -50,16 +51,24 @@ export class ApexChartGatewayDelegate extends ComponentStoreDelegate {
         if (this.chart) {
             logger.debug(() => `Received '${eventName}' event!`);
             const {
-                MESSAGE_RESPONSE_EVENT
+                MESSAGE_RESPONSE_EVENT,
+                MESSAGE_REQUEST_EVENT
             } = MessageEvents;
 
             const {
+                functionToCall,
                 seriesName
             } = eventObject;
 
             switch (eventName) {
                 case MESSAGE_RESPONSE_EVENT:
-                    this.chart.toggleSeries(seriesName);
+                    if (functionToCall == "toggleSeries") {
+                        this.fireEvent(MESSAGE_REQUEST_EVENT, { result: this.chart.toggleSeries(seriesName) });
+                    } else if (functionToCall == "showSeries") {
+                        this.chart.showSeries(seriesName);
+                    } else if (functionToCall == "hideSeries") {
+                        this.chart.hideSeries(seriesName);
+                    }
                     break;
                 default:
                     logger.warn(() => `No delegate event handler found for event: ${eventName} in ApexChartGatewayDelegate`);
@@ -75,6 +84,7 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
     private lastZoom: Array<any> = [];
 
     componentDidMount () {
+        logger.debug(() => `Creating new chart`);
         this.chart = new ApexCharts(this.chartRef.current, this.getConfig());
         this.initDelegate();
         this.chart.render();
@@ -96,22 +106,22 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
         const currentOptions = JSON.stringify(this.props.props.options);
         const currentSeries = JSON.stringify(this.props.props.series);
 
-        if (prevOptions !== currentOptions || prevSeries !== currentSeries) {
-            if (prevOptions === currentOptions) {
-                // options are not changed, just the series is changed
-                this.chart.updateSeries(this.prepareSeries(this.props.props.type, this.props.props.series));
+        if (prevOptions === currentOptions && prevSeries !== currentSeries) {
+            // options are not changed, just the series is changed
+            logger.debug(() => `Updating series`);
+            this.chart.updateSeries(this.prepareSeries(this.props.props.type, this.props.props.series));
 
-                if (this.lastZoom.length > 0) {
-                    this.chart.zoomX(this.lastZoom[0], this.lastZoom[1]);
-                }
-            } else {
-                // both might be changed
-                logger.debug(() => `Destroying chart`);
-                this.chart.destroy();
-                this.chart = new ApexCharts(this.chartRef.current, this.getConfig());
-                this.initDelegate();
-                this.chart.render();
+            if (this.lastZoom.length > 0) {
+                this.chart.zoomX(this.lastZoom[0], this.lastZoom[1]);
             }
+        } else {
+            // both might be changed
+            logger.debug(() => `Destroying chart`);
+            this.chart.destroy();
+            logger.debug(() => `Creating new chart`);
+            this.chart = new ApexCharts(this.chartRef.current, this.getConfig());
+            this.initDelegate();
+            this.chart.render();
         }
     }
 
@@ -163,7 +173,11 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
                 options.chart.events.beforeMount = undefined;
             }
 
-            options.chart.events.mounted = this.mountedHandler;
+            if (options.chart.events.mounted) {
+                options.chart.events.mounted = this.mountedHandler;
+            } else {
+                options.chart.events.mounted = undefined;
+            }
 
             if (options.chart.events.updated) {
                 options.chart.events.updated = this.updatedHandler;
@@ -294,15 +308,9 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
 
     @bind
     mountedHandler(chartContext, config) {
-        if (this.chart) {
-            this.chart.windowResizeHandler();
-        }
-
-        if (this.props.props.options.chart.events.mounted) {
-            const e = {
-            };
-            this.props.componentEvents.fireComponentEvent("mountedHandler", e);
-        }
+        const e = {
+        };
+        this.props.componentEvents.fireComponentEvent("mountedHandler", e);
     }
 
     @bind

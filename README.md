@@ -223,10 +223,24 @@ Component Scripting Functions
 ---------------
 
 The Apex Chart component provides the following scripting functions you can interface with in Python:
-- toggleSeries(String seriesName)
+- toggleSeries(String seriesName) returns Boolean
+- showSeries(String seriesName)
+- hideSeries(String seriesName)
 
-```json
+### `toggleSeries`
+This method allows you to toggle the visibility of series programmatically. Useful when you have a custom legend. You can learn more about the toggleSeries function [here](https://apexcharts.com/docs/methods/#toggleSeries).
+```
 self.getSibling("apexchart").toggleSeries("SeriesA")
 ```
 
-You can learn more about the toggleSeries function [here](https://apexcharts.com/docs/methods/#toggleSeries).
+### `showSeries`
+This method allows you to show the hidden series. If the series is already visible, this doesn’t affect it. You can learn more about the toggleSeries function [here](https://apexcharts.com/docs/methods/#showSeries).
+```
+self.getSibling("apexchart").showSeries("SeriesA")
+```
+
+### `hideSeries`
+This method allows you to hide the visible series. If the series is already hidden, this method doesn’t affect it. You can learn more about the toggleSeries function [here](https://apexcharts.com/docs/methods/#hideSeries).
+```
+self.getSibling("apexchart").hideSeries("SeriesA")
+```
