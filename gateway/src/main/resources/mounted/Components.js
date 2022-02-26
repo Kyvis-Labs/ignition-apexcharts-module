@@ -3246,7 +3246,7 @@ class ApexChart extends perspective_client_1.Component {
                 if (type !== "treemap") {
                     let hasObject = false;
                     for (let row of s.data) {
-                        if (row instanceof Object) {
+                        if (row instanceof Object && Array.isArray(row)) {
                             hasObject = true;
                         }
                         break;

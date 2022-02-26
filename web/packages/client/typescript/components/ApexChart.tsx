@@ -263,7 +263,7 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
                 if (type !== "treemap"){
                     let hasObject: boolean = false;
                     for (let row of s.data) {
-                        if (row instanceof Object){
+                        if (row instanceof Object && Array.isArray(row)){
                             hasObject = true;
                         }
                         break;
