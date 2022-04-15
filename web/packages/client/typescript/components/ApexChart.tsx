@@ -114,7 +114,7 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
             if (this.lastZoom.length > 0) {
                 this.chart.zoomX(this.lastZoom[0], this.lastZoom[1]);
             }
-        } else {
+        } else if (prevOptions !== currentOptions) {
             // both might be changed
             logger.debug(() => `Destroying chart`);
             this.chart.destroy();

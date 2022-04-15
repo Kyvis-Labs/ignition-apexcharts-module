@@ -3107,7 +3107,7 @@ class ApexChart extends perspective_client_1.Component {
                 this.chart.zoomX(this.lastZoom[0], this.lastZoom[1]);
             }
         }
-        else {
+        else if (prevOptions !== currentOptions) {
             // both might be changed
             logger.debug(() => `Destroying chart`);
             this.chart.destroy();
