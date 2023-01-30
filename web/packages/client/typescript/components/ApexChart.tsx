@@ -10,13 +10,18 @@ import {
     PComponent,
     PropertyTree,
     SizeObject,
-    PlainObject
+    PlainObject,
+    isPlainObject,
+    TypeCode,
+    Dataset
 } from '@inductiveautomation/perspective-client';
 import { bind } from 'bind-decorator';
 const objectScan = require('object-scan');
 import ApexCharts from 'apexcharts/dist/apexcharts.min';
 
 export const COMPONENT_TYPE = "kyvislabs.display.apexchart";
+
+window["ApexCharts"] = ApexCharts;
 
 const logger = makeLogger(COMPONENT_TYPE);
 
@@ -88,6 +93,10 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
         this.chart = new ApexCharts(this.chartRef.current, this.getConfig());
         this.initDelegate();
         this.chart.render();
+
+        setTimeout(() => {
+            this.chart.windowResizeHandler();
+        }, 1000);
     }
 
     initDelegate() {
@@ -254,37 +263,66 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
 
     @bind
     prepareSeries(type, series) {
-        if (type !== "pie" && type !== "donut" && type !== "radialBar" && type !== "rangeBar" && type !== "polarArea"){
-            for (let s of series) {
+        const seriesLength: number = this.props.store.props.readLength("series");
+
+        for (let i = 0; i < seriesLength; i++) {
+            const s = series[i];
+
+            if (isPlainObject(s)) {
                 if (typeof s.data === 'undefined' || s.data === null || typeof s.data === 'string' || typeof s.data === 'number' || typeof s.data === 'bigint' || typeof s.data === 'boolean' || typeof s.data === 'symbol' || typeof s.data === 'function') {
                     s.data = [];
                 }
 
-                if (type !== "treemap"){
-                    let hasObject: boolean = false;
-                    for (let row of s.data) {
-                        if (row instanceof Object && Array.isArray(row)){
-                            hasObject = true;
+                const dataPropertyPath = `series[${i}].data`;
+                const dataType = this.props.store.props.readType(dataPropertyPath);
+
+                if (dataType === TypeCode.Dataset) {
+                    const dataset: Dataset = this.props.store.props.readDataset(dataPropertyPath)!;
+                    const rawData = [...dataset];
+                    const newData: Array<any> = new Array<any>();
+
+                    for (let index = 0; index < rawData.length; index++) {
+                        if (dataset.columnCount == 1){
+                            newData.push(rawData[index][0]);
+                        } else if (dataset.columnCount > 1){
+                            newData.push({
+                                x: rawData[index][0],
+                                y: rawData[index][1]
+                            });
                         }
-                        break;
                     }
 
-                    if (hasObject) {
-                        const newData: Array<any> = new Array<any>();
-                        for (let row of s.data) {
-                            if (row instanceof Object){
-                                let rowData: Array<any> = Object.values(row);
-                                if (rowData.length == 1){
-                                    newData.push(rowData[0]);
-                                } else {
-                                    newData.push(rowData);
-                                }
-                            } else {
-                                newData.push(row);
+                    s.data = newData;
+                } else if (dataType === TypeCode.Array) {
+                    const rawData = this.props.store.props.readArray(dataPropertyPath);
+                    const newData: Array<any> = new Array<any>();
+
+                    for (let index = 0; index < rawData.length; index++) {
+                        const rowData = rawData[index];
+                        if (isPlainObject(rowData)){
+                            const rowDataArray = Object.values(rowData);
+
+                            if (rowDataArray.length == 1){
+                                newData.push(rowDataArray);
+                            } else if (rowDataArray.length > 1){
+                                newData.push({
+                                    x: rowDataArray[0],
+                                    y: rowDataArray[1]
+                                });
+                            }
+                        } else {
+                            if (!Array.isArray(rowData) || rowData.length == 1){
+                                newData.push(rowData);
+                            } else if (rowData.length > 1){
+                                newData.push({
+                                    x: rowData[0],
+                                    y: rowData[1]
+                                });
                             }
                         }
-                        s.data = newData;
                     }
+
+                    s.data = newData;
                 }
             }
         }
