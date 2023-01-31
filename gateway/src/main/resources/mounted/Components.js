@@ -3278,22 +3278,28 @@ class ApexChart extends perspective_client_1.Component {
                             if (rowDataArray.length == 1) {
                                 newData.push(rowDataArray);
                             }
-                            else if (rowDataArray.length > 1) {
+                            else if (rowDataArray.length == 2) {
                                 newData.push({
                                     x: rowDataArray[0],
                                     y: rowDataArray[1]
                                 });
+                            }
+                            else {
+                                newData.push(rowData);
                             }
                         }
                         else {
                             if (!Array.isArray(rowData) || rowData.length == 1) {
                                 newData.push(rowData);
                             }
-                            else if (rowData.length > 1) {
+                            else if (rowData.length == 2) {
                                 newData.push({
                                     x: rowData[0],
                                     y: rowData[1]
                                 });
+                            }
+                            else {
+                                newData.push(rowData);
                             }
                         }
                     }
