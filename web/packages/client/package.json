@@ -19,7 +19,8 @@
         "react": "16.8.4",
         "react-dom": "16.8.4",
         "apexcharts": "3.36.3",
-        "object-scan": "13.9.0"
+        "object-scan": "13.9.0",
+        "clean-deep": "3.4.0"
     },
     "devDependencies": {
         "@types/history": "^4.6.0",

@@ -13,10 +13,13 @@ import {
     PlainObject,
     isPlainObject,
     TypeCode,
-    Dataset
+    Dataset,
+    ReactResizeDetector,
+    ResizeDetectorRefreshRate
 } from '@inductiveautomation/perspective-client';
 import { bind } from 'bind-decorator';
 const objectScan = require('object-scan');
+const cleanDeep = require('clean-deep');
 import ApexCharts from 'apexcharts/dist/apexcharts.min';
 
 export const COMPONENT_TYPE = "kyvislabs.display.apexchart";
@@ -89,14 +92,10 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
     private lastZoom: Array<any> = [];
 
     componentDidMount () {
-        logger.debug(() => `Creating new chart`);
+        logger.debug("Creating initial chart");
         this.chart = new ApexCharts(this.chartRef.current, this.getConfig());
         this.initDelegate();
         this.chart.render();
-
-        setTimeout(() => {
-            this.chart.windowResizeHandler();
-        }, 1000);
     }
 
     initDelegate() {
@@ -117,7 +116,7 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
 
         if (prevOptions === currentOptions && prevSeries !== currentSeries) {
             // options are not changed, just the series is changed
-            logger.debug(() => `Updating series`);
+            logger.debug("Series changed, updating");
             this.chart.updateSeries(this.prepareSeries(this.props.props.type, this.props.props.series));
 
             if (this.lastZoom.length > 0) {
@@ -125,9 +124,9 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
             }
         } else if (prevOptions !== currentOptions) {
             // both might be changed
-            logger.debug(() => `Destroying chart`);
+            logger.debug("Destroying chart");
             this.chart.destroy();
-            logger.debug(() => `Creating new chart`);
+            logger.debug("Creating new chart");
             this.chart = new ApexCharts(this.chartRef.current, this.getConfig());
             this.initDelegate();
             this.chart.render();
@@ -141,17 +140,22 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
     }
 
     getConfig () {
-        const newOptions = this.prepareOptions(JSON.parse(JSON.stringify(this.props.props.options)));
+        const optionsStr = JSON.stringify(this.props.props.options);
+        const newOptions = this.prepareOptions(JSON.parse(optionsStr));
 
         if (newOptions.chart) {
             newOptions.chart.type = this.props.props.type;
             newOptions.chart.height = "100%";
             newOptions.chart.width = "100%";
+            newOptions.chart.redrawOnParentResize = false;
+            newOptions.chart.redrawOnWindowResize = false;
         } else {
             newOptions.chart = {
                 type: this.props.props.type,
                 height: "100%",
-                width: "100%"
+                width: "100%",
+                redrawOnParentResize: false,
+                redrawOnWindowResize: false
             };
         }
 
@@ -160,7 +164,15 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
     }
 
     @bind
+    handleResize(width: number, height: number): void {
+        logger.debug("Size changed (" + width + ":" + height + ") updating series");
+        this.chart.updateSeries(this.prepareSeries(this.props.props.type, this.props.props.series));
+    }
+
+    @bind
     prepareOptions(options) {
+        options = cleanDeep(options);
+
         objectScan(['**'], {
             filterFn: ({ parent, property, value }) => {
                 if (typeof value === 'string' && value && (value.startsWith("function (") || value.startsWith("function("))) {
@@ -546,6 +558,13 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
             return (
                 <div {...this.props.emit()}>
                    <div ref={this.chartRef} />
+                   <ReactResizeDetector
+                       handleHeight={ true }
+                       handleWidth={ true }
+                       onResize={ this.handleResize }
+                       refreshMode="debounce"
+                       refreshRate={ ResizeDetectorRefreshRate.STANDARD }
+                   />
                 </div>
             );
         }
