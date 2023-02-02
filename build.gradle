@@ -24,7 +24,7 @@ plugins {
     id "base"
 }
 
-version "1.0.12"
+version "1.0.13"
 group "com.kyvislabs"
 
 
