@@ -6361,7 +6361,7 @@ class ApexChart extends perspective_client_1.Component {
         objectScan(['**'], {
             filterFn: ({ parent, property, value }) => {
                 if (typeof value === 'string' && value && (value.startsWith("function (") || value.startsWith("function("))) {
-                    parent[property] = new Function("return " + value)();
+                    parent[property] = eval("const fn = " + value);
                 }
             }
         })(options);
