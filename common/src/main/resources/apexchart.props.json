@@ -21,7 +21,8 @@
                 "candlestick",
                 "polarArea",
                 "rangeBar",
-                "treemap"
+                "treemap",
+                "rangeArea"
             ],
             "description": "The ApexChart type",
             "default": "line"
