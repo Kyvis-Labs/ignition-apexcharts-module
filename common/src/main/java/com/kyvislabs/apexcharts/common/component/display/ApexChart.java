@@ -60,6 +60,7 @@ public class ApexChart {
             .addPaletteEntry("apexchart-line", "ApexChart Line", "An ApexChart line component.", null, (new JsonParser()).parse(new InputStreamReader(Components.class.getResourceAsStream("/variants/apexchart.line.props.json"))).getAsJsonObject())
             .addPaletteEntry("apexchart-pie", "ApexChart Pie", "An ApexChart pie component.", null, (new JsonParser()).parse(new InputStreamReader(Components.class.getResourceAsStream("/variants/apexchart.pie.props.json"))).getAsJsonObject())
             .addPaletteEntry("apexchart-radar", "ApexChart Radar", "An ApexChart radar component.", null, (new JsonParser()).parse(new InputStreamReader(Components.class.getResourceAsStream("/variants/apexchart.radar.props.json"))).getAsJsonObject())
+            .addPaletteEntry("apexchart-timeseries", "ApexChart Time Series", "An ApexChart time series component.", null, (new JsonParser()).parse(new InputStreamReader(Components.class.getResourceAsStream("/variants/apexchart.timeseries.props.json"))).getAsJsonObject())
             .setDefaultMetaName("apexchart")
             .setResources(Components.BROWSER_RESOURCES)
             .build();

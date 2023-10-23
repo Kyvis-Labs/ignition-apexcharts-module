@@ -22,7 +22,8 @@
                 "polarArea",
                 "rangeBar",
                 "treemap",
-                "rangeArea"
+                "rangeArea",
+                "boxPlot"
             ],
             "description": "The ApexChart type",
             "default": "line"
