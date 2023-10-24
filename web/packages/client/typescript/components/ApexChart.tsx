@@ -63,19 +63,22 @@ export class ApexChartGatewayDelegate extends ComponentStoreDelegate {
                 MESSAGE_REQUEST_EVENT
             } = MessageEvents;
 
-            const {
-                functionToCall,
-                seriesName
-            } = eventObject;
+            const functionToCall = eventObject.functionToCall;
 
             switch (eventName) {
                 case MESSAGE_RESPONSE_EVENT:
                     if (functionToCall == "toggleSeries") {
-                        this.fireEvent(MESSAGE_REQUEST_EVENT, { result: this.chart.toggleSeries(seriesName) });
+                        this.fireEvent(MESSAGE_REQUEST_EVENT, { result: this.chart.toggleSeries(eventObject.seriesName) });
                     } else if (functionToCall == "showSeries") {
-                        this.chart.showSeries(seriesName);
+                        this.chart.showSeries(eventObject.seriesName);
                     } else if (functionToCall == "hideSeries") {
-                        this.chart.hideSeries(seriesName);
+                        this.chart.hideSeries(eventObject.seriesName);
+                    } else if (functionToCall == "addPointAnnotation") {
+                        this.chart.addPointAnnotation(eventObject.options, eventObject.pushToMemory);
+                    } else if (functionToCall == "clearAnnotations") {
+                        this.chart.clearAnnotations();
+                    } else if (functionToCall == "updateSeries") {
+                        this.chart.updateSeries(eventObject.newSeries, eventObject.animate);
                     }
                     break;
                 default:

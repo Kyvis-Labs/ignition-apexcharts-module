@@ -244,3 +244,29 @@ This method allows you to hide the visible series. If the series is already hidd
 ```
 self.getSibling("apexchart").hideSeries("SeriesA")
 ```
+
+### `addPointAnnotation`
+This method can be used to draw annotations after chart is rendered. You can learn more about the addPointAnnotation function [here](https://apexcharts.com/docs/methods/#addpointannotation).
+```
+self.getSibling("apexchart").addPointAnnotation({
+  "x": 1698098270040,
+  "y": 40,
+  "label": {
+    "text": "Lorem Ipsum"
+  },
+}, True)
+```
+
+### `clearAnnotations`
+This method is used to delete all annotation elements which are added dynamically using the method stated above. You can learn more about the clearAnnotations function [here](https://apexcharts.com/docs/methods/#clearAnnotations).
+```
+self.getSibling("apexchart").clearAnnotations()
+```
+
+### `updateSeries`
+Allows you to update the series array overriding the existing one. If you want to append series to existing series. You can learn more about the updateSeries function [here](https://apexcharts.com/docs/methods/#updateSeries).
+```
+self.getSibling("apexchart").updateSeries([{
+  "data": [32, 44, 31, 41, 22]
+}], True)
+```

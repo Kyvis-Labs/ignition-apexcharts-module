@@ -1,5 +1,6 @@
 package com.kyvislabs.apexcharts.gateway;
 
+import com.inductiveautomation.ignition.common.gson.Gson;
 import com.inductiveautomation.ignition.common.gson.JsonObject;
 import com.inductiveautomation.ignition.common.script.builtin.KeywordArgs;
 import com.inductiveautomation.ignition.common.script.builtin.PyArgumentMap;
@@ -8,8 +9,11 @@ import com.inductiveautomation.perspective.gateway.api.ComponentModelDelegate;
 import com.inductiveautomation.perspective.gateway.api.ScriptCallable;
 import com.inductiveautomation.perspective.gateway.messages.EventFiredMsg;
 import org.python.core.Py;
+import org.python.core.PyArray;
+import org.python.core.PyDictionary;
 import org.python.core.PyObject;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ApexChartModelDelegate extends ComponentModelDelegate {
@@ -102,6 +106,48 @@ public class ApexChartModelDelegate extends ComponentModelDelegate {
         JsonObject payload = new JsonObject();
         payload.addProperty("functionToCall", "hideSeries");
         payload.addProperty("seriesName", seriesName);
+        fireEvent(OUTBOUND_EVENT_NAME, payload);
+    }
+
+    @ScriptCallable
+    @KeywordArgs(names = {"options", "pushToMemory"}, types = {PyDictionary.class, Boolean.class})
+    public void addPointAnnotation(PyObject[] pyArgs, String[] keywords) throws Exception {
+        PyArgumentMap argumentMap =
+                PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "addPointAnnotation");
+        PyDictionary options = (PyDictionary) argumentMap.get("options");
+        Boolean pushToMemory = argumentMap.getBooleanArg("pushToMemory", true);
+
+        Gson gson = new Gson();
+        log.debug("Calling addPointAnnotation");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("functionToCall", "addPointAnnotation");
+        payload.add("options", gson.toJsonTree(options));
+        payload.addProperty("pushToMemory", pushToMemory);
+        fireEvent(OUTBOUND_EVENT_NAME, payload);
+    }
+
+    @ScriptCallable
+    public void clearAnnotations() throws Exception {
+        log.debug("Calling clearAnnotations");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("functionToCall", "clearAnnotations");
+        fireEvent(OUTBOUND_EVENT_NAME, payload);
+    }
+
+    @ScriptCallable
+    @KeywordArgs(names = {"newSeries", "animate"}, types = {List.class, Boolean.class})
+    public void updateSeries(PyObject[] pyArgs, String[] keywords) throws Exception {
+        PyArgumentMap argumentMap =
+                PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "updateSeries");
+        List newSeries = (List) argumentMap.get("newSeries");
+        Boolean animate = argumentMap.getBooleanArg("animate", true);
+
+        Gson gson = new Gson();
+        log.debug("Calling updateSeries");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("functionToCall", "updateSeries");
+        payload.add("newSeries", gson.toJsonTree(newSeries));
+        payload.addProperty("animate", animate);
         fireEvent(OUTBOUND_EVENT_NAME, payload);
     }
 
