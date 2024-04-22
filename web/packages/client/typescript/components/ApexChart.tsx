@@ -14,8 +14,7 @@ import {
     isPlainObject,
     TypeCode,
     Dataset,
-    ReactResizeDetector,
-    ResizeDetectorRefreshRate
+    ReactResizeDetector
 } from '@inductiveautomation/perspective-client';
 import { bind } from 'bind-decorator';
 const objectScan = require('object-scan');
@@ -116,6 +115,8 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
         const prevSeries = JSON.stringify(prevProps.props.series);
         const currentOptions = JSON.stringify(this.props.props.options);
         const currentSeries = JSON.stringify(this.props.props.series);
+        const prevType = prevProps.props.type;
+        const currentType = this.props.props.type;
 
         if (prevOptions === currentOptions && prevSeries !== currentSeries) {
             // options are not changed, just the series is changed
@@ -125,7 +126,7 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
             if (this.lastZoom.length > 0) {
                 this.chart.zoomX(this.lastZoom[0], this.lastZoom[1]);
             }
-        } else if (prevOptions !== currentOptions) {
+        } else if (prevOptions !== currentOptions || prevType !== currentType) {
             // both might be changed
             logger.debug("Destroying chart");
             this.chart.destroy();
@@ -211,16 +212,22 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
                 options.chart.events.updated = undefined;
             }
 
-            if (options.chart.events.click) {
-                options.chart.events.click = this.clickHandler;
-            } else {
-                options.chart.events.click = undefined;
-            }
-
             if (options.chart.events.mouseMove) {
                 options.chart.events.mouseMove = this.mouseMoveHandler;
             } else {
                 options.chart.events.mouseMove = undefined;
+            }
+
+            if (options.chart.events.mouseLeave) {
+                options.chart.events.mouseLeave = this.mouseLeaveHandler;
+            } else {
+                options.chart.events.mouseLeave = undefined;
+            }
+
+            if (options.chart.events.click) {
+                options.chart.events.click = this.clickHandler;
+            } else {
+                options.chart.events.click = undefined;
             }
 
             if (options.chart.events.legendClick) {
@@ -233,6 +240,12 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
                 options.chart.events.markerClick = this.markerClickHandler;
             } else {
                 options.chart.events.markerClick = undefined;
+            }
+
+            if (options.chart.events.xAxisLabelClick) {
+                options.chart.events.xAxisLabelClick = this.xAxisLabelClickHandler;
+            } else {
+                options.chart.events.xAxisLabelClick = undefined;
             }
 
             if (options.chart.events.selection) {
@@ -261,6 +274,12 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
 
             options.chart.events.zoomed = this.zoomedHandler;
             options.chart.events.beforeResetZoom = this.beforeResetZoomHandler;
+
+            if (options.chart.events.beforeZoom) {
+                options.chart.events.beforeZoom = this.beforeZoomHandler;
+            } else {
+                options.chart.events.beforeZoom = undefined;
+            }
 
             if (options.chart.events.scrolled) {
                 options.chart.events.scrolled = this.scrolledHandler;
@@ -418,6 +437,25 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
     }
 
     @bind
+    mouseLeaveHandler(event, chartContext, config) {
+        const e = {
+            dataPointIndex: config.dataPointIndex,
+            seriesIndex: config.seriesIndex,
+            mouseEvent: {
+                type: event.type,
+                x: event.x,
+                y: event.y,
+                screenX: event.screenX,
+                screenY: event.screenY,
+                altKey: event.altKey,
+                ctrlKey: event.ctrlKey,
+                shiftKey: event.shiftKey
+            }
+        };
+        this.props.componentEvents.fireComponentEvent("mouseLeaveHandler", e);
+    }
+
+    @bind
     legendClickHandler(chartContext, seriesIndex, config) {
         const e = {
             seriesIndex: seriesIndex
@@ -442,6 +480,24 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
             }
         };
         this.props.componentEvents.fireComponentEvent("markerClickHandler", e);
+    }
+
+    @bind
+    xAxisLabelClickHandler(event, chartContext, config) {
+        const e = {
+            labelIndex: config.labelIndex,
+            mouseEvent: {
+                type: event.type,
+                x: event.x,
+                y: event.y,
+                screenX: event.screenX,
+                screenY: event.screenY,
+                altKey: event.altKey,
+                ctrlKey: event.ctrlKey,
+                shiftKey: event.shiftKey
+            }
+        };
+        this.props.componentEvents.fireComponentEvent("xAxisLabelClickHandler", e);
     }
 
     @bind
@@ -533,6 +589,17 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
     }
 
     @bind
+    beforeZoomHandler(chartContext, { xaxis }) {
+        const e = {
+            xaxis: {
+                min: xaxis.min,
+                max: xaxis.max
+            }
+        };
+        this.props.componentEvents.fireComponentEvent("beforeZoomHandler", e);
+    }
+
+    @bind
     scrolledHandler(chartContext, { xaxis }) {
         const e = {
             xaxis: {
@@ -568,7 +635,6 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
                        handleWidth={ true }
                        onResize={ this.handleResize }
                        refreshMode="debounce"
-                       refreshRate={ ResizeDetectorRefreshRate.STANDARD }
                    />
                 </div>
             );

@@ -13,6 +13,10 @@
                     "type": "number",
                     "description": "The series index"
                 },
+                "labelIndex": {
+                    "type": "number",
+                    "description": "The label index"
+                },
                 "mouseEvent": {
                     "type": "object",
                     "description": "The mouse event",
