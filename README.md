@@ -234,15 +234,27 @@ self.getSibling("apexchart").toggleSeries("SeriesA")
 ```
 
 ### `showSeries`
-This method allows you to show the hidden series. If the series is already visible, this doesn’t affect it. You can learn more about the toggleSeries function [here](https://apexcharts.com/docs/methods/#showSeries).
+This method allows you to show the hidden series. If the series is already visible, this doesn’t affect it. You can learn more about the showSeries function [here](https://apexcharts.com/docs/methods/#showSeries).
 ```
 self.getSibling("apexchart").showSeries("SeriesA")
 ```
 
 ### `hideSeries`
-This method allows you to hide the visible series. If the series is already hidden, this method doesn’t affect it. You can learn more about the toggleSeries function [here](https://apexcharts.com/docs/methods/#hideSeries).
+This method allows you to hide the visible series. If the series is already hidden, this method doesn’t affect it. You can learn more about the hideSeries function [here](https://apexcharts.com/docs/methods/#hideSeries).
 ```
 self.getSibling("apexchart").hideSeries("SeriesA")
+```
+
+### `resetSeries`
+Resets all toggled series and bring back the chart to its original state. You can learn more about the resetSeries function [here](https://apexcharts.com/docs/methods/#resetSeries).
+```
+self.getSibling("apexchart").resetSeries(True, True)
+```
+
+### `zoomX`
+Manually zoom into the chart with the start and end X values. You can learn more about the zoomX function [here](https://apexcharts.com/docs/methods/#zoomX).
+```
+self.getSibling("apexchart").zoomX(1698098360040, 1698098480040)
 ```
 
 ### `addPointAnnotation`
