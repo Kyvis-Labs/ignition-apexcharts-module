@@ -9,7 +9,6 @@ import com.inductiveautomation.perspective.gateway.api.ComponentModelDelegate;
 import com.inductiveautomation.perspective.gateway.api.ScriptCallable;
 import com.inductiveautomation.perspective.gateway.messages.EventFiredMsg;
 import org.python.core.Py;
-import org.python.core.PyArray;
 import org.python.core.PyDictionary;
 import org.python.core.PyObject;
 
@@ -106,6 +105,38 @@ public class ApexChartModelDelegate extends ComponentModelDelegate {
         JsonObject payload = new JsonObject();
         payload.addProperty("functionToCall", "hideSeries");
         payload.addProperty("seriesName", seriesName);
+        fireEvent(OUTBOUND_EVENT_NAME, payload);
+    }
+
+    @ScriptCallable
+    @KeywordArgs(names = {"shouldUpdateChart", "shouldResetZoom"}, types = {Boolean.class, Boolean.class})
+    public void resetSeries(PyObject[] pyArgs, String[] keywords) throws Exception {
+        PyArgumentMap argumentMap =
+                PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "resetSeries");
+        Boolean shouldUpdateChart = argumentMap.getBooleanArg("shouldUpdateChart");
+        Boolean shouldResetZoom = argumentMap.getBooleanArg("shouldResetZoom");
+
+        log.debugf("Calling resetSeries with shouldUpdateChart=%s and shouldResetZoom=%s", shouldUpdateChart, shouldResetZoom);
+        JsonObject payload = new JsonObject();
+        payload.addProperty("functionToCall", "resetSeries");
+        payload.addProperty("shouldUpdateChart", shouldUpdateChart);
+        payload.addProperty("shouldResetZoom", shouldResetZoom);
+        fireEvent(OUTBOUND_EVENT_NAME, payload);
+    }
+
+    @ScriptCallable
+    @KeywordArgs(names = {"start", "end"}, types = {Long.class, Long.class})
+    public void zoomX(PyObject[] pyArgs, String[] keywords) throws Exception {
+        PyArgumentMap argumentMap =
+                PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "zoomX");
+        Long start = argumentMap.getLongArg("start");
+        Long end = argumentMap.getLongArg("end");
+
+        log.debugf("Calling zoomX with start=%s and end=%s", start, end);
+        JsonObject payload = new JsonObject();
+        payload.addProperty("functionToCall", "zoomX");
+        payload.addProperty("start", start);
+        payload.addProperty("end", end);
         fireEvent(OUTBOUND_EVENT_NAME, payload);
     }
 

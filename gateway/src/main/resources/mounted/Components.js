@@ -6261,6 +6261,12 @@ class ApexChartGatewayDelegate extends perspective_client_1.ComponentStoreDelega
                     else if (functionToCall == "hideSeries") {
                         this.chart.hideSeries(eventObject.seriesName);
                     }
+                    else if (functionToCall == "resetSeries") {
+                        this.chart.resetSeries(eventObject.shouldUpdateChart, eventObject.shouldResetZoom);
+                    }
+                    else if (functionToCall == "zoomX") {
+                        this.chart.zoomX(eventObject.start, eventObject.end);
+                    }
                     else if (functionToCall == "addPointAnnotation") {
                         this.chart.addPointAnnotation(eventObject.options, eventObject.pushToMemory);
                     }
