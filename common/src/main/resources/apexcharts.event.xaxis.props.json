@@ -1,23 +1,17 @@
 {
     "type": "object",
     "properties": {
-        "event": {
+        "xaxis": {
             "type": "object",
-            "description": "The event object",
+            "description": "Chart xaxis",
             "properties": {
-                "xaxis": {
-                    "type": "object",
-                    "description": "Chart xaxis",
-                    "properties": {
-                        "min": {
-                            "type": "number",
-                            "description": "Chart xaxis min"
-                        },
-                        "max": {
-                            "type": "number",
-                            "description": "Chart xaxis max"
-                        }
-                    }
+                "min": {
+                    "type": "number",
+                    "description": "Chart xaxis min"
+                },
+                "max": {
+                    "type": "number",
+                    "description": "Chart xaxis max"
                 }
             }
         }

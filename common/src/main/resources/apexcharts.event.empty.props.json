@@ -1,11 +1,6 @@
 {
     "type": "object",
     "properties": {
-        "event": {
-            "type": "object",
-            "description": "The event object",
-            "properties": {
-            }
-        }
+
     }
 }

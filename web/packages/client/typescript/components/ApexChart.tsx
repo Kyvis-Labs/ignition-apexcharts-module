@@ -56,7 +56,8 @@ export class ApexChartGatewayDelegate extends ComponentStoreDelegate {
     @bind
     handleEvent(eventName: string, eventObject: PlainObject): void {
         if (this.chart) {
-            logger.debug(() => `Received '${eventName}' event!`);
+            const eventObjectStr = JSON.stringify(eventObject);
+            logger.debug(() => `Received '${eventName}' event: ${eventObjectStr}`);
             const {
                 MESSAGE_RESPONSE_EVENT,
                 MESSAGE_REQUEST_EVENT
@@ -97,11 +98,29 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
     private chart: ApexCharts = null;
     private lastZoom: Array<any> = [];
 
-    componentDidMount () {
-        logger.debug("Creating initial chart");
+    createChart () {
+        if (this.chart){
+            logger.debug("Destroying chart");
+            this.chart.destroy();
+        }
+
+        logger.debug("Creating new chart");
         this.chart = new ApexCharts(this.chartRef.current, this.getConfig());
         this.initDelegate();
         this.chart.render();
+    }
+
+    updateData () {
+        if (this.props.props.type == "boxPlot") {
+            this.createChart();
+        } else {
+            logger.debug("Updating series data");
+            this.chart.updateSeries(this.prepareSeries(this.props.props.type, this.props.props.series));
+        }
+    }
+
+    componentDidMount () {
+        logger.debug("Component mounted");
     }
 
     initDelegate() {
@@ -125,19 +144,16 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
         if (prevOptions === currentOptions && prevSeries !== currentSeries) {
             // options are not changed, just the series is changed
             logger.debug("Series changed, updating");
-            this.chart.updateSeries(this.prepareSeries(this.props.props.type, this.props.props.series));
+            this.updateData();
 
             if (this.lastZoom.length > 0) {
+                logger.debug("Setting zoom (" + this.lastZoom[0] + ":" + this.lastZoom[1] + ")");
                 this.chart.zoomX(this.lastZoom[0], this.lastZoom[1]);
             }
         } else if (prevOptions !== currentOptions || prevType !== currentType) {
             // both might be changed
-            logger.debug("Destroying chart");
-            this.chart.destroy();
-            logger.debug("Creating new chart");
-            this.chart = new ApexCharts(this.chartRef.current, this.getConfig());
-            this.initDelegate();
-            this.chart.render();
+            logger.debug("Options or type changed, creating new chart");
+            this.createChart();
         }
     }
 
@@ -173,8 +189,12 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
 
     @bind
     handleResize(width: number, height: number): void {
-        logger.debug("Size changed (" + width + ":" + height + ") updating series");
-        this.chart.updateSeries(this.prepareSeries(this.props.props.type, this.props.props.series));
+        logger.debug("Size changed (" + width + ":" + height + ")");
+        if (this.chart == null) {
+            this.createChart();
+        } else {
+            this.updateData();
+        }
     }
 
     @bind
