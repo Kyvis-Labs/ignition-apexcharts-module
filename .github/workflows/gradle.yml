@@ -47,6 +47,7 @@ jobs:
       env:
         KYVIS_PFX: ${{ secrets.KYVIS_PFX }}
       run: |
+        touch ./build/kyvis.pfx
         echo $KYVIS_PFX | base64 --decode > ./build/kyvis.pfx
     
     - name: Download P7B Chain
