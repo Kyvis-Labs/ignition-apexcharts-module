@@ -1,0 +1,88 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+# This workflow will build a Java project with Gradle and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle
+
+name: Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version'
+        required: true
+        type: string
+      title:
+        description: 'Release title'
+        required: true
+        type: string
+      description:
+        description: 'Release description'
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up JDK 11
+      uses: actions/setup-java@v4
+      with:
+        java-version: '11'
+        distribution: 'zulu'
+
+    # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
+    # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
+
+    - name: Make gradlew executable
+      run: chmod +x ./gradlew
+
+    - name: Create Build Directory
+      run: mkdir ./build
+
+    - name: Download JKS Cert Store
+      run: |
+        echo "${{ secrets.KYVIS_PFX }}" | base64 --decode > ./build/kyvis.pfx
+    
+    - name: Download P7B Chain
+      run: |
+        echo "${{ secrets.KYVIS_P7B }}" > ./build/kyvis.p7b
+
+    - name: Download Sign Props
+      run: |
+        echo "${{ secrets.KYVIS_PASS }}" > ./sign.props
+
+    - name: Build with Gradle Wrapper
+      run: ./gradlew buildSignedModule
+
+    - name: Add Version to Signed Module
+      run: mv ./build/ApexCharts.modl ./build/ApexCharts-${{ github.event.inputs.version }}.modl
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.event.inputs.version }}
+        release_name: "${{ github.event.inputs.version }}: ${{ github.event.inputs.title }}"
+        body: "${{ github.event.inputs.description }}"
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./build/ApexCharts-${{ github.event.inputs.version }}.modl
+        asset_name: ApexCharts-${{ github.event.inputs.version }}.modl
+        asset_content_type: application/zip
