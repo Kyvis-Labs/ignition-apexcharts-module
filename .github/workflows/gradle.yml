@@ -54,18 +54,9 @@ jobs:
       run: |
         echo "${{ secrets.KYVIS_P7B }}" > ./build/kyvis.p7b
 
-    - name: Create Sign Props
+    - name: Download Sign Props
       run: |
-        echo cat <<EOF > ./sign.props
-        key.file=./build/kyvis.pfx
-        key.pass=${{ secrets.KYVIS_PASS }}
-        cert.file=./build/kyvis.p7b
-        cert.pass=${{ secrets.KYVIS_PASS }}
-        cert.alias=${{ secrets.KYVIS_PASS }}
-        EOF
-
-    - name: Echo Sign Props
-      run: echo "$(cat ./sign.props)"
+        echo "${{ secrets.KYVIS_PASS }}" > ./sign.props
 
     - name: Build with Gradle Wrapper
       run: ./gradlew buildSignedModule
