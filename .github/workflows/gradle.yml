@@ -47,13 +47,13 @@ jobs:
     - name: Download JKS Cert Store
       env:
         KYVIS_PFX: ${{ secrets.KYVIS_PFX }}
-      run: echo $KYVIS_PFX | base64 --decode >> ./build/kyvis.pfx
+      run: echo $KYVIS_PFX | base64 --decode > ./build/kyvis.pfx
     
     - name: Download P7B Chain
-      run: echo "${{ secrets.KYVIS_P7B }}" >> ./build/kyvis.p7b
+      run: echo "${{ secrets.KYVIS_P7B }}" > ./build/kyvis.p7b
 
     - name: Create Sign Props
-      run: echo cat <<EOT >> ./sign.props
+      run: echo cat <<EOT > ./sign.props
            key.file=./build/kyvis.pfx
            key.pass=${{ secrets.KYVIS_PASS }}
            cert.file=./build/kyvis.p7b
