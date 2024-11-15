@@ -45,7 +45,9 @@ jobs:
       run: chmod +x ./gradlew
 
     - name: Download JKS Cert Store
-      run: echo "${{ secrets.KYVIS_PFX }}" | base64 --decode >> ./build/kyvis.pfx
+      env:
+        KYVIS_PFX: ${{ secrets.KYVIS_PFX }}
+      run: echo "$KYVIS_PFX" | base64 --decode >> ./build/kyvis.pfx
     
     - name: Download P7B Chain
       run: echo "${{ secrets.KYVIS_P7B }}" >> ./build/kyvis.p7b
