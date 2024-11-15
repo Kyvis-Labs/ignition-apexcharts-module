@@ -14,6 +14,7 @@ node {
     npmVersion = "6.4.1"
     download = true
     nodeModulesDir = file(project.projectDir)
+    distBaseUrl = 'https://direct.nodejs.org/dist/'
 }
 
 //// define a variable that describes the path to the mounted gateway folder, where we want to put things eventually
