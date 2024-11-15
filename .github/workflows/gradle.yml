@@ -56,16 +56,16 @@ jobs:
 
     - name: Create Sign Props
       run: |
-        echo cat <<EOT > ./sign.props
+        echo cat <<EOF > ./sign.props
         key.file=./build/kyvis.pfx
         key.pass=${{ secrets.KYVIS_PASS }}
         cert.file=./build/kyvis.p7b
         cert.pass=${{ secrets.KYVIS_PASS }}
         cert.alias=${{ secrets.KYVIS_PASS }}
-        EOT
+        EOF
 
     - name: Echo Sign Props
-      run: cat ./sign.props
+      run: cat ./sign.props >> "$GITHUB_OUTPUT"
 
     - name: Build with Gradle Wrapper
       run: ./gradlew buildSignedModule
