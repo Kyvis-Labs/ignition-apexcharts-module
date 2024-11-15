@@ -24,7 +24,7 @@ plugins {
     id "base"
 }
 
-version __MODULE_VERSION__
+version "__MODULE_VERSION__"
 group "com.kyvislabs"
 
 
