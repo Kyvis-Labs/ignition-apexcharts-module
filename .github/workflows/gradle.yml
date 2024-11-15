@@ -5,7 +5,7 @@
 # This workflow will build a Java project with Gradle and cache/restore any dependencies to improve the workflow execution time
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle
 
-name: Build and Release
+name: Build and Test
 
 on:
   workflow_dispatch:
@@ -44,14 +44,29 @@ jobs:
     - name: Make gradlew executable
       run: chmod +x ./gradlew
 
-    - name: Check gradlew version
-      run: ./gradlew --version
+    - name: Download JKS Cert Store
+      run: echo "${{ secrets.KYVIS_PFX }}" | base64 --decode >> build/kyvis.pfx
+    
+    - name: Download P7B Chain
+      run: echo "${{ secrets.KYVIS_P7B }}" >> build/kyvis.p7b
+
+    - name: Create Sign Props
+      run: echo cat <<EOT >> sign.props
+           key.file=./build/kyvis.pfx
+           key.pass=${{ secrets.KYVIS_PASS }}
+           cert.file=./build/kyvis.p7b
+           cert.pass=${{ secrets.KYVIS_PASS }}
+           cert.alias=${{ secrets.KYVIS_PASS }}
+           EOT
 
     - name: Build with Gradle Wrapper
       run: ./gradlew buildModule
+
+    - name: Add Version to Signed Module
+      run: mv build/ApexCharts.modl build/ApexCharts-${{ github.event.inputs.version }}.modl
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: Package
-        path: build/ApexCharts-unsigned.modl
+        path: build/ApexCharts-${{ github.event.inputs.version }}.modl
