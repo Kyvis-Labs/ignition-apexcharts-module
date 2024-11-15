@@ -46,6 +46,9 @@ jobs:
     - name: Create Build Directory
       run: mkdir ./build
 
+    - name: Replace Version in Gradle Build
+      run: sed -i 's/__MODULE_VERSION__/${{ github.event.inputs.version }}/g' ./build.gradle      
+
     - name: Download JKS Cert Store
       run: |
         echo "${{ secrets.KYVIS_PFX }}" | base64 --decode > ./build/kyvis.pfx
