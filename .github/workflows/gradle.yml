@@ -25,7 +25,6 @@ on:
 
 jobs:
   build:
-    environment: 'Module Signing'
     runs-on: ubuntu-latest
 
     steps:
