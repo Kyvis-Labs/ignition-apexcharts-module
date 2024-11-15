@@ -43,8 +43,8 @@ jobs:
     - name: Make gradlew executable
       run: chmod +x ./gradlew
 
-    - name: Touch JKS Cert Store
-      run: touch ./build/kyvis.pfx
+    - name: Create build Directory
+      run: mkdir ./build
 
     - name: Download JKS Cert Store
       env:
