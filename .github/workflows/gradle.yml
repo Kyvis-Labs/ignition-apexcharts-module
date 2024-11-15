@@ -43,7 +43,7 @@ jobs:
     - name: Make gradlew executable
       run: chmod +x ./gradlew
 
-    - name: Create build Directory
+    - name: Create Build Directory
       run: mkdir ./build
 
     - name: Download JKS Cert Store
@@ -63,6 +63,9 @@ jobs:
         cert.pass=${{ secrets.KYVIS_PASS }}
         cert.alias=${{ secrets.KYVIS_PASS }}
         EOT
+
+    - name: Echo Sign Props
+      run: cat ./sign.props
 
     - name: Build with Gradle Wrapper
       run: ./gradlew buildSignedModule
