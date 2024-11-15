@@ -65,7 +65,7 @@ jobs:
         EOF
 
     - name: Echo Sign Props
-      run: echo "sign.props=$(cat ./sign.props)" >> $GITHUB_OUTPUT
+      run: echo "$(cat ./sign.props)"
 
     - name: Build with Gradle Wrapper
       run: ./gradlew buildSignedModule
