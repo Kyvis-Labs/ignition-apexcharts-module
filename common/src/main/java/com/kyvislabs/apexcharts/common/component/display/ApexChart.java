@@ -44,6 +44,7 @@ public class ApexChart {
     public static ComponentEventDescriptor DATA_POINT_MOUSE_LEAVE_HANDLER = new ComponentEventDescriptor("dataPointMouseLeaveHandler", "MouseLeave event for a datapoint (bar/column/marker/bubble/donut-slice).", JsonSchema.parse(Components.class.getResourceAsStream("/apexcharts.event.mouse.props.json")));
     public static ComponentEventDescriptor ZOOMED_HANDLER = new ComponentEventDescriptor("zoomedHandler", "Fires when user zooms in/out the chart using either the selection zooming tool or zoom in/out buttons.", JsonSchema.parse(Components.class.getResourceAsStream("/apexcharts.event.xaxis.props.json")));
     public static ComponentEventDescriptor BEFORE_ZOOM_HANDLER = new ComponentEventDescriptor("beforeZoomHandler", "This function, if defined, runs just before zooming in/out of the chart allowing you to set a custom range for zooming in/out.", JsonSchema.parse(Components.class.getResourceAsStream("/apexcharts.event.xaxis.props.json")));
+    public static ComponentEventDescriptor BEFORE_RESET_ZOOM_HANDLER = new ComponentEventDescriptor("beforeResetZoomHandler", "This function, if defined, runs just before resetting the zoomed chart to the original state.", JsonSchema.parse(Components.class.getResourceAsStream("/apexcharts.event.xaxis.props.json")));
     public static ComponentEventDescriptor SCROLLED_HANDLER = new ComponentEventDescriptor("scrolledHandler", "Fires when user scrolls using the pan tool.", JsonSchema.parse(Components.class.getResourceAsStream("/apexcharts.event.xaxis.props.json")));
     public static ComponentEventDescriptor BRUSH_SCROLLED_HANDLER = new ComponentEventDescriptor("brushScrolledHandler", "Fires when user drags the brush in a brush chart.", JsonSchema.parse(Components.class.getResourceAsStream("/apexcharts.event.xaxis.props.json")));
 
@@ -56,7 +57,7 @@ public class ApexChart {
             .setId(COMPONENT_ID)
             .setModuleId(Components.MODULE_ID)
             .setSchema(SCHEMA) //  this could alternatively be created purely in Java if desired
-            .setEvents(Arrays.asList(ANIMATION_END_HANDLER, BEFORE_MOUNT_HANDLER, MOUNTED_HANDLER, UPDATED_HANDLER, CLICK_HANDLER, MOUSE_MOVE_HANDLER, MOUSE_LEAVE_HANDLER, LEGEND_CLICK_HANDLER, MARKER_CLICK_HANDLER, X_AXIS_LABEL_CLICK_HANDLER, SELECTION_HANDLER, DATA_POINT_SELECTION_HANDLER, DATA_POINT_MOUSE_ENTER_HANDLER, DATA_POINT_MOUSE_LEAVE_HANDLER, BEFORE_ZOOM_HANDLER, ZOOMED_HANDLER, SCROLLED_HANDLER, BRUSH_SCROLLED_HANDLER))
+            .setEvents(Arrays.asList(ANIMATION_END_HANDLER, BEFORE_MOUNT_HANDLER, MOUNTED_HANDLER, UPDATED_HANDLER, CLICK_HANDLER, MOUSE_MOVE_HANDLER, MOUSE_LEAVE_HANDLER, LEGEND_CLICK_HANDLER, MARKER_CLICK_HANDLER, X_AXIS_LABEL_CLICK_HANDLER, SELECTION_HANDLER, DATA_POINT_SELECTION_HANDLER, DATA_POINT_MOUSE_ENTER_HANDLER, DATA_POINT_MOUSE_LEAVE_HANDLER, BEFORE_ZOOM_HANDLER, ZOOMED_HANDLER, BEFORE_RESET_ZOOM_HANDLER, SCROLLED_HANDLER, BRUSH_SCROLLED_HANDLER))
             .setName("ApexChart")
             .setIcon(new ImageIcon(Components.class.getResource("/icons/apexcharts.png")))
             .addPaletteEntry("", "ApexChart", "An ApexChart component.", null, null)
