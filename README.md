@@ -276,9 +276,123 @@ self.getSibling("apexchart").clearAnnotations()
 ```
 
 ### `updateSeries`
-Allows you to update the series array overriding the existing one. If you want to append series to existing series. You can learn more about the updateSeries function [here](https://apexcharts.com/docs/methods/#updateSeries).
+Allows you to update the series array overriding the existing one. You can learn more about the updateSeries function [here](https://apexcharts.com/docs/methods/#updateSeries). There is one additional parameter to determine whether to maintain zoom, called maintainZoom that is a boolean.
 ```
 self.getSibling("apexchart").updateSeries([{
   "data": [32, 44, 31, 41, 22]
 }], True)
+```
+
+```
+self.getSibling("apexchart").updateSeries(newSeries=[{
+  "data": [32, 44, 31, 41, 22]
+}], maintainZoom=True)
+```
+
+### `updateOptions`
+Allows you to update the options map overriding the existing one. You can learn more about the updateOptions function [here](https://apexcharts.com/docs/methods/#updateOptions). There is one additional parameter to determine whether to maintain zoom, called maintainZoom that is a boolean.
+```
+self.getSibling("apexchart").updateOptions({
+	  "chart": {
+	    "stacked": False,
+	    "toolbar": {
+	      "show": True
+	    },
+	    "type": "line",
+	    "events": {
+	      "animationEnd": False,
+	      "beforeMount": False,
+	      "mounted": False,
+	      "updated": False,
+	      "mouseMove": False,
+	      "mouseLeave": False,
+	      "click": False,
+	      "legendClick": False,
+	      "markerClick": False,
+	      "xAxisLabelClick": False,
+	      "selection": False,
+	      "dataPointSelection": False,
+	      "dataPointMouseEnter": False,
+	      "dataPointMouseLeave": False,
+	      "beforeZoom": False,
+	      "beforeResetZoom": False,
+	      "zoomed": False,
+	      "scrolled": False,
+	      "brushScrolled": False
+	    }
+	  },
+	  "dataLabels": {
+	    "enabled": False
+	  },
+	  "fill": {
+	    "opacity": 1
+	  },
+	  "markers": {
+	    "size": 0
+	  },
+	  "stroke": {
+	    "width": 3
+	  },
+	  "xaxis": {
+	    "type": "datetime"
+	  },
+	  "yaxis": {
+	    "labels": {
+	      "formatter": "function (val) {                     return val.toFixed(2);                   }"
+	    }
+	  }
+	}, True)
+```
+
+```
+self.getSibling("apexchart").updateOptions(newOptions={
+	  "chart": {
+	    "stacked": False,
+	    "toolbar": {
+	      "show": True
+	    },
+	    "type": "line",
+	    "events": {
+	      "animationEnd": False,
+	      "beforeMount": False,
+	      "mounted": False,
+	      "updated": False,
+	      "mouseMove": False,
+	      "mouseLeave": False,
+	      "click": False,
+	      "legendClick": False,
+	      "markerClick": False,
+	      "xAxisLabelClick": False,
+	      "selection": False,
+	      "dataPointSelection": False,
+	      "dataPointMouseEnter": False,
+	      "dataPointMouseLeave": False,
+	      "beforeZoom": False,
+	      "beforeResetZoom": False,
+	      "zoomed": False,
+	      "scrolled": False,
+	      "brushScrolled": False
+	    }
+	  },
+	  "dataLabels": {
+	    "enabled": False
+	  },
+	  "fill": {
+	    "opacity": 1
+	  },
+	  "markers": {
+	    "size": 0
+	  },
+	  "stroke": {
+	    "width": 3
+	  },
+	  "xaxis": {
+	    "type": "datetime"
+	  },
+	  "yaxis": {
+	    "labels": {
+	      "formatter": "function (val) {                     return val.toFixed(2);                   }"
+	    }
+	  }
+	}, maintainZoom=True)
 ```

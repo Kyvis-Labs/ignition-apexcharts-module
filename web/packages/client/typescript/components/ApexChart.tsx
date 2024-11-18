@@ -40,14 +40,13 @@ enum MessageEvents {
 }
 
 export class ApexChartGatewayDelegate extends ComponentStoreDelegate {
-    private chart: ApexCharts | null = null;
+    private chart: ApexChart | null = null;
 
     constructor(componentStore: AbstractUIElementStore) {
         super(componentStore);
     }
 
-    @bind
-    init(chart: ApexCharts) {
+    init(chart: ApexChart) {
         if (chart) {
             this.chart = chart;
         }
@@ -68,21 +67,32 @@ export class ApexChartGatewayDelegate extends ComponentStoreDelegate {
             switch (eventName) {
                 case MESSAGE_RESPONSE_EVENT:
                     if (functionToCall == "toggleSeries") {
-                        this.fireEvent(MESSAGE_REQUEST_EVENT, { result: this.chart.toggleSeries(eventObject.seriesName) });
+                        this.fireEvent(MESSAGE_REQUEST_EVENT, { result: this.chart.chart.toggleSeries(eventObject.seriesName) });
                     } else if (functionToCall == "showSeries") {
-                        this.chart.showSeries(eventObject.seriesName);
+                        this.chart.chart.showSeries(eventObject.seriesName);
                     } else if (functionToCall == "hideSeries") {
-                        this.chart.hideSeries(eventObject.seriesName);
+                        this.chart.chart.hideSeries(eventObject.seriesName);
                     } else if (functionToCall == "resetSeries") {
-                        this.chart.resetSeries(eventObject.shouldUpdateChart, eventObject.shouldResetZoom);
+                        this.chart.chart.resetSeries(eventObject.shouldUpdateChart, eventObject.shouldResetZoom);
                     } else if (functionToCall == "zoomX") {
-                        this.chart.zoomX(eventObject.start, eventObject.end);
+                        this.chart.chart.zoomX(eventObject.start, eventObject.end);
                     } else if (functionToCall == "addPointAnnotation") {
-                        this.chart.addPointAnnotation(eventObject.options, eventObject.pushToMemory);
+                        this.chart.chart.addPointAnnotation(eventObject.options, eventObject.pushToMemory);
                     } else if (functionToCall == "clearAnnotations") {
-                        this.chart.clearAnnotations();
+                        this.chart.chart.clearAnnotations();
                     } else if (functionToCall == "updateSeries") {
-                        this.chart.updateSeries(eventObject.newSeries, eventObject.animate);
+                        this.chart.chart.updateSeries(this.chart.prepareSeries(this.chart.props.props.type, eventObject.newSeries), eventObject.animate);
+
+                        if (eventObject.maintainZoom && this.chart.lastZoom.length > 0) {
+                            logger.debug("Setting zoom (" + this.chart.lastZoom[0] + ":" + this.chart.lastZoom[1] + ")");
+                            this.chart.chart.zoomX(this.chart.lastZoom[0], this.chart.lastZoom[1]);
+                        }
+                    } else if (functionToCall == "updateOptions") {
+                        this.chart.chart.updateOptions(this.chart.prepareOptions(eventObject.newOptions), eventObject.redrawPaths, eventObject.animate, eventObject.updateSyncedCharts);
+
+                        if (!eventObject.maintainZoom) {
+                            this.chart.chart.resetSeries(true, true);
+                        }
                     }
                     break;
                 default:
@@ -94,9 +104,9 @@ export class ApexChartGatewayDelegate extends ComponentStoreDelegate {
 
 export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
 
-    private chartRef: RefObject<HTMLDivElement> = React.createRef();
-    private chart: ApexCharts = null;
-    private lastZoom: Array<any> = [];
+    public chartRef: RefObject<HTMLDivElement> = React.createRef();
+    public chart: ApexCharts = null;
+    public lastZoom: Array<any> = [];
 
     createChart () {
         if (this.chart){
@@ -125,7 +135,7 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
 
     initDelegate() {
         if (this.props.store.delegate) {
-            (this.props.store.delegate as ApexChartGatewayDelegate).init(this.chart);
+            (this.props.store.delegate as ApexChartGatewayDelegate).init(this);
         }
     }
 
@@ -166,23 +176,6 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
     getConfig () {
         const optionsStr = JSON.stringify(this.props.props.options);
         const newOptions = this.prepareOptions(JSON.parse(optionsStr));
-
-        if (newOptions.chart) {
-            newOptions.chart.type = this.props.props.type;
-            newOptions.chart.height = "100%";
-            newOptions.chart.width = "100%";
-            newOptions.chart.redrawOnParentResize = false;
-            newOptions.chart.redrawOnWindowResize = false;
-        } else {
-            newOptions.chart = {
-                type: this.props.props.type,
-                height: "100%",
-                width: "100%",
-                redrawOnParentResize: false,
-                redrawOnWindowResize: false
-            };
-        }
-
         newOptions.series = this.prepareSeries(this.props.props.type, this.props.props.series);
         return newOptions;
     }
@@ -316,6 +309,22 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
             } else {
                 options.chart.events.brushScrolled = undefined;
             }
+        }
+
+        if (options.chart) {
+            options.chart.type = this.props.props.type;
+            options.chart.height = "100%";
+            options.chart.width = "100%";
+            options.chart.redrawOnParentResize = false;
+            options.chart.redrawOnWindowResize = false;
+        } else {
+            options.chart = {
+                type: this.props.props.type,
+                height: "100%",
+                width: "100%",
+                redrawOnParentResize: false,
+                redrawOnWindowResize: false
+            };
         }
 
         return options;

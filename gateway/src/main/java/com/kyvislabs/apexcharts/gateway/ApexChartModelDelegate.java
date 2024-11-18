@@ -113,8 +113,8 @@ public class ApexChartModelDelegate extends ComponentModelDelegate {
     public void resetSeries(PyObject[] pyArgs, String[] keywords) throws Exception {
         PyArgumentMap argumentMap =
                 PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "resetSeries");
-        Boolean shouldUpdateChart = argumentMap.getBooleanArg("shouldUpdateChart");
-        Boolean shouldResetZoom = argumentMap.getBooleanArg("shouldResetZoom");
+        Boolean shouldUpdateChart = argumentMap.getBooleanArg("shouldUpdateChart", true);
+        Boolean shouldResetZoom = argumentMap.getBooleanArg("shouldResetZoom", true);
 
         log.debugf("Calling resetSeries with shouldUpdateChart=%s and shouldResetZoom=%s", shouldUpdateChart, shouldResetZoom);
         JsonObject payload = new JsonObject();
@@ -166,12 +166,13 @@ public class ApexChartModelDelegate extends ComponentModelDelegate {
     }
 
     @ScriptCallable
-    @KeywordArgs(names = {"newSeries", "animate"}, types = {List.class, Boolean.class})
+    @KeywordArgs(names = {"newSeries", "animate", "maintainZoom"}, types = {List.class, Boolean.class, Boolean.class})
     public void updateSeries(PyObject[] pyArgs, String[] keywords) throws Exception {
         PyArgumentMap argumentMap =
                 PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "updateSeries");
         List newSeries = (List) argumentMap.get("newSeries");
         Boolean animate = argumentMap.getBooleanArg("animate", true);
+        Boolean maintainZoom = argumentMap.getBooleanArg("maintainZoom", false);
 
         Gson gson = new Gson();
         log.debug("Calling updateSeries");
@@ -179,6 +180,30 @@ public class ApexChartModelDelegate extends ComponentModelDelegate {
         payload.addProperty("functionToCall", "updateSeries");
         payload.add("newSeries", gson.toJsonTree(newSeries));
         payload.addProperty("animate", animate);
+        payload.addProperty("maintainZoom", maintainZoom);
+        fireEvent(OUTBOUND_EVENT_NAME, payload);
+    }
+
+    @ScriptCallable
+    @KeywordArgs(names = {"newOptions", "redrawPaths", "animate", "updateSyncedCharts", "maintainZoom"}, types = {PyDictionary.class, Boolean.class, Boolean.class, Boolean.class, Boolean.class})
+    public void updateOptions(PyObject[] pyArgs, String[] keywords) throws Exception {
+        PyArgumentMap argumentMap =
+                PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "updateOptions");
+        PyDictionary newOptions = (PyDictionary) argumentMap.get("newOptions");
+        Boolean redrawPaths = argumentMap.getBooleanArg("redrawPaths", false);
+        Boolean animate = argumentMap.getBooleanArg("animate", true);
+        Boolean updateSyncedCharts = argumentMap.getBooleanArg("updateSyncedCharts", true);
+        Boolean maintainZoom = argumentMap.getBooleanArg("maintainZoom", false);
+
+        Gson gson = new Gson();
+        log.debug("Calling updateOptions");
+        JsonObject payload = new JsonObject();
+        payload.addProperty("functionToCall", "updateOptions");
+        payload.add("newOptions", gson.toJsonTree(newOptions));
+        payload.addProperty("redrawPaths", redrawPaths);
+        payload.addProperty("animate", animate);
+        payload.addProperty("updateSyncedCharts", updateSyncedCharts);
+        payload.addProperty("maintainZoom", maintainZoom);
         fireEvent(OUTBOUND_EVENT_NAME, payload);
     }
 
