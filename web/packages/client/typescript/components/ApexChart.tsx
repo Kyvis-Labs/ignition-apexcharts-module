@@ -12,8 +12,6 @@ import {
     SizeObject,
     PlainObject,
     isPlainObject,
-    TypeCode,
-    Dataset,
     ReactResizeDetector
 } from '@inductiveautomation/perspective-client';
 import { bind } from 'bind-decorator';
@@ -332,7 +330,7 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
 
     @bind
     prepareSeries(type, series) {
-        const seriesLength: number = this.props.store.props.readLength("series");
+        const seriesLength: number = series.length;
 
         for (let i = 0; i < seriesLength; i++) {
             const s = series[i];
@@ -342,61 +340,45 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
                     s.data = [];
                 }
 
-                const dataPropertyPath = `series[${i}].data`;
-                const dataType = this.props.store.props.readType(dataPropertyPath);
+                const newData: Array<any> = new Array<any>();
 
-                if (dataType === TypeCode.Dataset) {
-                    const dataset: Dataset = this.props.store.props.readDataset(dataPropertyPath)!;
-                    const rawData = [...dataset];
-                    const newData: Array<any> = new Array<any>();
+                for (let index = 0; index < s.data.length; index++) {
+                    const rowData = s.data[index];
+                    if (isPlainObject(rowData)){
+                        const rowDataArray = Object.values(rowData);
 
-                    for (let index = 0; index < rawData.length; index++) {
-                        if (dataset.columnCount == 1){
-                            newData.push(rawData[index][0]);
-                        } else if (dataset.columnCount > 1){
-                            newData.push({
-                                x: rawData[index][0],
-                                y: rawData[index][1]
-                            });
-                        }
-                    }
-
-                    s.data = newData;
-                } else if (dataType === TypeCode.Array) {
-                    const rawData = this.props.store.props.readArray(dataPropertyPath);
-                    const newData: Array<any> = new Array<any>();
-
-                    for (let index = 0; index < rawData.length; index++) {
-                        const rowData = rawData[index];
-                        if (isPlainObject(rowData)){
-                            const rowDataArray = Object.values(rowData);
-
-                            if (rowDataArray.length == 1){
-                                newData.push(rowDataArray);
-                            } else if (rowDataArray.length == 2){
+                        if (rowDataArray.length == 1){
+                            newData.push(rowDataArray);
+                        } else if (rowDataArray.length == 2){
+                            if (rowData.x && rowData.y){
+                                newData.push({
+                                    x: rowData.x,
+                                    y: rowData.y
+                                });
+                            } else {
                                 newData.push({
                                     x: rowDataArray[0],
                                     y: rowDataArray[1]
                                 });
-                            } else {
-                                newData.push(rowData);
                             }
                         } else {
-                            if (!Array.isArray(rowData) || rowData.length == 1){
-                                newData.push(rowData);
-                            } else if (rowData.length == 2){
-                                newData.push({
-                                    x: rowData[0],
-                                    y: rowData[1]
-                                });
-                            } else {
-                                newData.push(rowData);
-                            }
+                            newData.push(rowData);
+                        }
+                    } else {
+                        if (!Array.isArray(rowData) || rowData.length == 1){
+                            newData.push(rowData);
+                        } else if (rowData.length == 2){
+                            newData.push({
+                                x: rowData[0],
+                                y: rowData[1]
+                            });
+                        } else {
+                            newData.push(rowData);
                         }
                     }
-
-                    s.data = newData;
                 }
+
+                s.data = newData;
             }
         }
 

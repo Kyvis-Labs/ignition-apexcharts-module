@@ -6515,69 +6515,55 @@ class ApexChart extends perspective_client_1.Component {
         return options;
     }
     prepareSeries(type, series) {
-        const seriesLength = this.props.store.props.readLength("series");
+        const seriesLength = series.length;
         for (let i = 0; i < seriesLength; i++) {
             const s = series[i];
             if (perspective_client_1.isPlainObject(s)) {
                 if (typeof s.data === 'undefined' || s.data === null || typeof s.data === 'string' || typeof s.data === 'number' || typeof s.data === 'bigint' || typeof s.data === 'boolean' || typeof s.data === 'symbol' || typeof s.data === 'function') {
                     s.data = [];
                 }
-                const dataPropertyPath = `series[${i}].data`;
-                const dataType = this.props.store.props.readType(dataPropertyPath);
-                if (dataType === perspective_client_1.TypeCode.Dataset) {
-                    const dataset = this.props.store.props.readDataset(dataPropertyPath);
-                    const rawData = [...dataset];
-                    const newData = new Array();
-                    for (let index = 0; index < rawData.length; index++) {
-                        if (dataset.columnCount == 1) {
-                            newData.push(rawData[index][0]);
+                const newData = new Array();
+                for (let index = 0; index < s.data.length; index++) {
+                    const rowData = s.data[index];
+                    if (perspective_client_1.isPlainObject(rowData)) {
+                        const rowDataArray = Object.values(rowData);
+                        if (rowDataArray.length == 1) {
+                            newData.push(rowDataArray);
                         }
-                        else if (dataset.columnCount > 1) {
-                            newData.push({
-                                x: rawData[index][0],
-                                y: rawData[index][1]
-                            });
-                        }
-                    }
-                    s.data = newData;
-                }
-                else if (dataType === perspective_client_1.TypeCode.Array) {
-                    const rawData = this.props.store.props.readArray(dataPropertyPath);
-                    const newData = new Array();
-                    for (let index = 0; index < rawData.length; index++) {
-                        const rowData = rawData[index];
-                        if (perspective_client_1.isPlainObject(rowData)) {
-                            const rowDataArray = Object.values(rowData);
-                            if (rowDataArray.length == 1) {
-                                newData.push(rowDataArray);
+                        else if (rowDataArray.length == 2) {
+                            if (rowData.x && rowData.y) {
+                                newData.push({
+                                    x: rowData.x,
+                                    y: rowData.y
+                                });
                             }
-                            else if (rowDataArray.length == 2) {
+                            else {
                                 newData.push({
                                     x: rowDataArray[0],
                                     y: rowDataArray[1]
                                 });
                             }
-                            else {
-                                newData.push(rowData);
-                            }
                         }
                         else {
-                            if (!Array.isArray(rowData) || rowData.length == 1) {
-                                newData.push(rowData);
-                            }
-                            else if (rowData.length == 2) {
-                                newData.push({
-                                    x: rowData[0],
-                                    y: rowData[1]
-                                });
-                            }
-                            else {
-                                newData.push(rowData);
-                            }
+                            newData.push(rowData);
                         }
                     }
-                    s.data = newData;
+                    else {
+                        if (!Array.isArray(rowData) || rowData.length == 1) {
+                            newData.push(rowData);
+                        }
+                        else if (rowData.length == 2) {
+                            newData.push({
+                                x: rowData[0],
+                                y: rowData[1]
+                            });
+                        }
+                        else {
+                            newData.push(rowData);
+                        }
+                    }
                 }
+                s.data = newData;
             }
         }
         return series;
