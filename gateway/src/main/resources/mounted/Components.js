@@ -6274,17 +6274,15 @@ class ApexChartGatewayDelegate extends perspective_client_1.ComponentStoreDelega
                         this.chart.chart.clearAnnotations();
                     }
                     else if (functionToCall == "updateSeries") {
-                        this.chart.chart.updateSeries(this.chart.prepareSeries(this.chart.props.props.type, eventObject.newSeries), eventObject.animate);
-                        if (eventObject.maintainZoom && this.chart.lastZoom.length > 0) {
-                            logger.debug("Setting zoom (" + this.chart.lastZoom[0] + ":" + this.chart.lastZoom[1] + ")");
-                            this.chart.chart.zoomX(this.chart.lastZoom[0], this.chart.lastZoom[1]);
-                        }
+                        this.chart.clearZoom();
+                        this.chart.props.store.props.write('series', eventObject.newSeries);
                     }
                     else if (functionToCall == "updateOptions") {
-                        this.chart.chart.updateOptions(this.chart.prepareOptions(eventObject.newOptions), eventObject.redrawPaths, eventObject.animate, eventObject.updateSyncedCharts);
-                        if (!eventObject.maintainZoom) {
-                            this.chart.chart.resetSeries(true, true);
-                        }
+                        this.chart.clearZoom();
+                        const optionsStr = JSON.stringify(this.chart.props.props.options);
+                        const options = JSON.parse(optionsStr);
+                        const combinedOptions = Object.assign(Object.assign({}, options), eventObject.newOptions);
+                        this.chart.props.store.props.write('options', combinedOptions);
                     }
                     break;
                 default:
@@ -6348,10 +6346,6 @@ class ApexChart extends perspective_client_1.Component {
             // options are not changed, just the series is changed
             logger.debug("Series changed, updating");
             this.updateData();
-            if (this.lastZoom.length > 0) {
-                logger.debug("Setting zoom (" + this.lastZoom[0] + ":" + this.lastZoom[1] + ")");
-                this.chart.zoomX(this.lastZoom[0], this.lastZoom[1]);
-            }
         }
         else if (prevOptions !== currentOptions || prevType !== currentType) {
             // both might be changed
@@ -6365,8 +6359,7 @@ class ApexChart extends perspective_client_1.Component {
         }
     }
     getConfig() {
-        const optionsStr = JSON.stringify(this.props.props.options);
-        const newOptions = this.prepareOptions(JSON.parse(optionsStr));
+        const newOptions = this.prepareOptions(this.props.props.options);
         newOptions.series = this.prepareSeries(this.props.props.type, this.props.props.series);
         return newOptions;
     }
@@ -6379,8 +6372,9 @@ class ApexChart extends perspective_client_1.Component {
             this.updateData();
         }
     }
-    prepareOptions(options) {
-        options = cleanDeep(options);
+    prepareOptions(inOptions) {
+        const optionsStr = JSON.stringify(inOptions);
+        const options = cleanDeep(JSON.parse(optionsStr));
         objectScan(['**'], {
             filterFn: ({ parent, property, value }) => {
                 if (typeof value === 'string' && value && (value.startsWith("function (") || value.startsWith("function("))) {
@@ -6514,7 +6508,9 @@ class ApexChart extends perspective_client_1.Component {
         }
         return options;
     }
-    prepareSeries(type, series) {
+    prepareSeries(type, inSeries) {
+        const seriesStr = JSON.stringify(inSeries);
+        const series = JSON.parse(seriesStr);
         const seriesLength = series.length;
         for (let i = 0; i < seriesLength; i++) {
             const s = series[i];
@@ -6734,11 +6730,19 @@ class ApexChart extends perspective_client_1.Component {
         };
         this.props.componentEvents.fireComponentEvent("dataPointMouseLeaveHandler", e);
     }
-    beforeResetZoomHandler(chartContext, opts) {
+    clearZoom() {
+        logger.debug("Clearing zoom");
         this.lastZoom = [];
+        this.props.store.props.write('zoom.start', "");
+        this.props.store.props.write('zoom.end', "");
+    }
+    beforeResetZoomHandler(chartContext, opts) {
+        this.clearZoom();
     }
     zoomedHandler(chartContext, { xaxis, yaxis }) {
         this.lastZoom = [xaxis.min, xaxis.max];
+        this.props.store.props.write('zoom.start', xaxis.min ? xaxis.min.toString() : "");
+        this.props.store.props.write('zoom.end', xaxis.max ? xaxis.max.toString() : "");
         if (this.props.props.options.chart.events.zoomed) {
             const e = {
                 xaxis: {
@@ -6892,6 +6896,12 @@ __decorate([
 __decorate([
     bind_decorator_1.bind,
     __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], ApexChart.prototype, "clearZoom", null);
+__decorate([
+    bind_decorator_1.bind,
+    __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], ApexChart.prototype, "beforeResetZoomHandler", null);
@@ -6940,7 +6950,8 @@ class ApexChartMeta {
         return {
             type: tree.readString("type"),
             options: tree.read("options"),
-            series: tree.readArray("series")
+            series: tree.readArray("series"),
+            zoom: tree.read("zoom")
         };
     }
 }
