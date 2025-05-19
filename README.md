@@ -223,42 +223,72 @@ Component Scripting Functions
 ---------------
 
 The Apex Chart component provides the following scripting functions you can interface with in Python:
-- toggleSeries(String seriesName) returns Boolean
-- showSeries(String seriesName)
-- hideSeries(String seriesName)
 
-### `toggleSeries`
+### `toggleSeries(seriesName)`
 This method allows you to toggle the visibility of series programmatically. Useful when you have a custom legend. You can learn more about the toggleSeries function [here](https://apexcharts.com/docs/methods/#toggleSeries).
+### Parameters
+| Property             | Description                                                                                                                                                                                                              |
+|:---------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `seriesName`         | The series name which you want to toggle visibility for.                                                                                                                                                                   |
+### Example
 ```
 self.getSibling("apexchart").toggleSeries("SeriesA")
 ```
 
-### `showSeries`
+### `showSeries(seriesName)`
 This method allows you to show the hidden series. If the series is already visible, this doesn’t affect it. You can learn more about the showSeries function [here](https://apexcharts.com/docs/methods/#showSeries).
+### Parameters
+| Property             | Description                                            |
+|:---------------------|:-------------------------------------------------------|
+| `seriesName`         | The series name which you want to show. |
+### Example
 ```
 self.getSibling("apexchart").showSeries("SeriesA")
 ```
 
-### `hideSeries`
+### `hideSeries(seriesName)`
 This method allows you to hide the visible series. If the series is already hidden, this method doesn’t affect it. You can learn more about the hideSeries function [here](https://apexcharts.com/docs/methods/#hideSeries).
+### Parameters
+| Property             | Description                             |
+|:---------------------|:----------------------------------------|
+| `seriesName`         | The series name which you want to hide. |
+### Example
 ```
 self.getSibling("apexchart").hideSeries("SeriesA")
 ```
 
-### `resetSeries`
+### `resetSeries(shouldUpdateChart, shouldResetZoom)`
 Resets all toggled series and bring back the chart to its original state. You can learn more about the resetSeries function [here](https://apexcharts.com/docs/methods/#resetSeries).
+### Parameters
+| Property             | Description                                            |
+|:---------------------|:-------------------------------------------------------|
+| `shouldUpdateChart`         | After resetting the series, the chart data should update and return to it’s original series. |
+| `shouldResetZoom`         | If the user has zoomed in when this method is called, the zoom level should also reset. |
+### Example
 ```
 self.getSibling("apexchart").resetSeries(True, True)
 ```
 
-### `zoomX`
+### `zoomX(start, end)`
 Manually zoom into the chart with the start and end X values. You can learn more about the zoomX function [here](https://apexcharts.com/docs/methods/#zoomX).
+### Parameters
+| Property | Description                                               |
+|:---------|:----------------------------------------------------------|
+| `start`  | The starting x-axis value. Accepts timestamp or a number. |
+| `end`    | 	The ending x-axis value. Accepts timestamp or a number.  |
+### Example
 ```
 self.getSibling("apexchart").zoomX(1698098360040, 1698098480040)
 ```
 
-### `addPointAnnotation`
+### `addPointAnnotation(options, pushToMemory)`
 This method can be used to draw annotations after chart is rendered. You can learn more about the addPointAnnotation function [here](https://apexcharts.com/docs/methods/#addpointannotation).
+### Parameters
+| Property | Description                                                                                                                                           |
+|:---------|:------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `options`  | This function accepts the same parameters as it accepts in the point annotations config.                                                              |
+| `annotations`    | 	When enabled, it preserves the annotations in subsequent chart updates. If you don’t want it to be saved for the next updates, turn off this option. |
+### Example
 ```
 self.getSibling("apexchart").addPointAnnotation({
   "x": 1698098270040,
@@ -269,28 +299,48 @@ self.getSibling("apexchart").addPointAnnotation({
 }, True)
 ```
 
-### `clearAnnotations`
+### `clearAnnotations()`
 This method is used to delete all annotation elements which are added dynamically using the method stated above. You can learn more about the clearAnnotations function [here](https://apexcharts.com/docs/methods/#clearAnnotations).
+### Example
 ```
 self.getSibling("apexchart").clearAnnotations()
 ```
 
-### `updateSeries`
+### `updateSeries(newSeries, [animate], [maintainZoom], [syncProps], [fetchResults])`
 Allows you to update the series array overriding the existing one. You can learn more about the updateSeries function [here](https://apexcharts.com/docs/methods/#updateSeries). There is one additional parameter to determine whether to maintain zoom, called maintainZoom that is a boolean.
+### Parameters
+| Property       | Description                                                                                                                                                                                                                                                                                                                                                                         |
+|:---------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `newSeries`    | The series array to override the existing one.                                                                                                                                                                                                                                                                                                                                      |
+| `animate`      | Optional. Should the chart animate on re-rendering. Default is true.                                                                                                                                                                                                                                                                                                                |
+| `maintainZoom` | Optional. Whether to maintain zoom if already zoomed into the chart. Default is true.                                                                                                                                                                                                                                                                                               |
+| `syncProps`    | Optional. Whether to sync the options with the Gateway's property model. Set true if you need this information on the Gateway. If true, the information will be synced through the websocket. Default is false.                                                                                                                                                                     |
+| `fetchResults` | Optional. Whether to send the series data to the browser via HTTP instead of websocket. If you are sending a very large set of data, the websocket may time out if the message size is not large enough causing the client to briefly disconnect. Instead set this true so the Gateway can prepare the data to be fetched by the browser through a HTTP GET call. Default is false. |
+### Examples
 ```
-self.getSibling("apexchart").updateSeries([{
+self.getSibling("apexchart").updateSeries(newSeries=[{
   "data": [32, 44, 31, 41, 22]
-}], True)
+}], syncProps=True)
 ```
 
 ```
 self.getSibling("apexchart").updateSeries(newSeries=[{
   "data": [32, 44, 31, 41, 22]
-}], maintainZoom=True)
+}], maintainZoom=False)
 ```
 
-### `updateOptions`
-Allows you to update the options map overriding the existing one. You can learn more about the updateOptions function [here](https://apexcharts.com/docs/methods/#updateOptions). There is one additional parameter to determine whether to maintain zoom, called maintainZoom that is a boolean.
+### `updateOptions(newOptions, [redrawPaths], [animate], [updateSyncedCharts], [maintainZoom], [syncProps])`
+Allows you to update the options map overriding the existing one. You can learn more about the updateOptions function [here](https://apexcharts.com/docs/methods/#updateOptions).
+### Parameters
+| Property             | Description                                                                                                                                                                                                              |
+|:---------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `newOptions`         | The configuration object to merge on the existing one.                                                                                                                                                                   |
+| `redrawPaths`        | Optional. When the chart is re-rendered, should it draw from the existing paths or completely redraw the chart paths from the beginning. By default, the chart is re-rendered from the existing paths. Default is false. |
+| `animate`            | Optional. Should the chart animate on re-rendering. Default is true.                                                                                                                                                               |
+| `updateSyncedCharts` | Optional. All the charts in a group should also update when one chart in a group is updated. Default is true.                                                                                                                      |
+| `maintainZoom`       | Optional. Whether to maintain zoom if already zoomed into the chart. Default is true.                                                                                                                                              |
+| `syncProps`          | Optional. Whether to sync the options with the Gateway's property model. Set true if you need this information on the Gateway. Default is false.                    |
+### Examples
 ```
 self.getSibling("apexchart").updateOptions({
 	  "chart": {

@@ -1,19 +1,26 @@
 package com.kyvislabs.apexcharts.gateway;
 
 import com.inductiveautomation.ignition.common.gson.Gson;
+import com.inductiveautomation.ignition.common.gson.JsonElement;
 import com.inductiveautomation.ignition.common.gson.JsonObject;
+import com.inductiveautomation.ignition.common.gson.internal.Streams;
+import com.inductiveautomation.ignition.common.gson.stream.JsonWriter;
 import com.inductiveautomation.ignition.common.script.builtin.KeywordArgs;
 import com.inductiveautomation.ignition.common.script.builtin.PyArgumentMap;
-import com.inductiveautomation.perspective.gateway.api.Component;
-import com.inductiveautomation.perspective.gateway.api.ComponentModelDelegate;
-import com.inductiveautomation.perspective.gateway.api.ScriptCallable;
+import com.inductiveautomation.ignition.gateway.dataroutes.RouteGroup;
+import com.inductiveautomation.perspective.gateway.api.*;
 import com.inductiveautomation.perspective.gateway.messages.EventFiredMsg;
 import org.python.core.Py;
 import org.python.core.PyDictionary;
 import org.python.core.PyObject;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class ApexChartModelDelegate extends ComponentModelDelegate {
     public static final String OUTBOUND_EVENT_NAME = "apexchart-response-event";
@@ -22,8 +29,11 @@ public class ApexChartModelDelegate extends ComponentModelDelegate {
     private AtomicBoolean toggleSeriesWaiting = new AtomicBoolean(false);
     private AtomicBoolean toggleSeriesReturn = new AtomicBoolean(false);
 
+    private PerspectiveContext context;
+
     public ApexChartModelDelegate(Component component) {
         super(component);
+        this.context = component.getSession().getPerspectiveContext();
     }
 
     @Override
@@ -42,8 +52,7 @@ public class ApexChartModelDelegate extends ComponentModelDelegate {
     @ScriptCallable
     @KeywordArgs(names = {"seriesName"}, types = {String.class})
     public boolean toggleSeries(PyObject[] pyArgs, String[] keywords) throws Exception {
-        PyArgumentMap argumentMap =
-                PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "toggleSeries");
+        PyArgumentMap argumentMap = PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "toggleSeries");
         String seriesName = argumentMap.getStringArg("seriesName");
 
         if (seriesName == null) {
@@ -75,8 +84,7 @@ public class ApexChartModelDelegate extends ComponentModelDelegate {
     @ScriptCallable
     @KeywordArgs(names = {"seriesName"}, types = {String.class})
     public void showSeries(PyObject[] pyArgs, String[] keywords) throws Exception {
-        PyArgumentMap argumentMap =
-                PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "showSeries");
+        PyArgumentMap argumentMap = PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "showSeries");
         String seriesName = argumentMap.getStringArg("seriesName");
 
         if (seriesName == null) {
@@ -93,8 +101,7 @@ public class ApexChartModelDelegate extends ComponentModelDelegate {
     @ScriptCallable
     @KeywordArgs(names = {"seriesName"}, types = {String.class})
     public void hideSeries(PyObject[] pyArgs, String[] keywords) throws Exception {
-        PyArgumentMap argumentMap =
-                PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "hideSeries");
+        PyArgumentMap argumentMap = PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "hideSeries");
         String seriesName = argumentMap.getStringArg("seriesName");
 
         if (seriesName == null) {
@@ -111,8 +118,7 @@ public class ApexChartModelDelegate extends ComponentModelDelegate {
     @ScriptCallable
     @KeywordArgs(names = {"shouldUpdateChart", "shouldResetZoom"}, types = {Boolean.class, Boolean.class})
     public void resetSeries(PyObject[] pyArgs, String[] keywords) throws Exception {
-        PyArgumentMap argumentMap =
-                PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "resetSeries");
+        PyArgumentMap argumentMap = PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "resetSeries");
         Boolean shouldUpdateChart = argumentMap.getBooleanArg("shouldUpdateChart", true);
         Boolean shouldResetZoom = argumentMap.getBooleanArg("shouldResetZoom", true);
 
@@ -127,8 +133,7 @@ public class ApexChartModelDelegate extends ComponentModelDelegate {
     @ScriptCallable
     @KeywordArgs(names = {"start", "end"}, types = {Long.class, Long.class})
     public void zoomX(PyObject[] pyArgs, String[] keywords) throws Exception {
-        PyArgumentMap argumentMap =
-                PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "zoomX");
+        PyArgumentMap argumentMap = PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "zoomX");
         Long start = argumentMap.getLongArg("start");
         Long end = argumentMap.getLongArg("end");
 
@@ -143,8 +148,7 @@ public class ApexChartModelDelegate extends ComponentModelDelegate {
     @ScriptCallable
     @KeywordArgs(names = {"options", "pushToMemory"}, types = {PyDictionary.class, Boolean.class})
     public void addPointAnnotation(PyObject[] pyArgs, String[] keywords) throws Exception {
-        PyArgumentMap argumentMap =
-                PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "addPointAnnotation");
+        PyArgumentMap argumentMap = PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "addPointAnnotation");
         PyDictionary options = (PyDictionary) argumentMap.get("options");
         Boolean pushToMemory = argumentMap.getBooleanArg("pushToMemory", true);
 
@@ -166,34 +170,52 @@ public class ApexChartModelDelegate extends ComponentModelDelegate {
     }
 
     @ScriptCallable
-    @KeywordArgs(names = {"newSeries", "animate", "maintainZoom"}, types = {List.class, Boolean.class, Boolean.class})
+    @KeywordArgs(names = {"newSeries", "animate", "maintainZoom", "syncProps", "fetchResults"}, types = {List.class, Boolean.class, Boolean.class, Boolean.class, Boolean.class})
     public void updateSeries(PyObject[] pyArgs, String[] keywords) throws Exception {
-        PyArgumentMap argumentMap =
-                PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "updateSeries");
+        PyArgumentMap argumentMap = PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "updateSeries");
         List newSeries = (List) argumentMap.get("newSeries");
         Boolean animate = argumentMap.getBooleanArg("animate", true);
         Boolean maintainZoom = argumentMap.getBooleanArg("maintainZoom", false);
+        Boolean syncProps = argumentMap.getBooleanArg("syncProps", false);
+        Boolean fetchResults = argumentMap.getBooleanArg("fetchResults", false);
 
+        String url = null;
         Gson gson = new Gson();
-        log.debug("Calling updateSeries");
         JsonObject payload = new JsonObject();
+        JsonElement json = gson.toJsonTree(newSeries);
+
+        if (fetchResults) {
+            syncProps = false;
+
+            Session session = component.getSession();
+            FetchableCache fetchableCache = context.getFetchableCache();
+            url = fetchableCache.addFetchable(session, new ApexDataFetch(session, json));
+        }
+
+
+        log.debug("Calling updateSeries");
         payload.addProperty("functionToCall", "updateSeries");
-        payload.add("newSeries", gson.toJsonTree(newSeries));
+        payload.add("newSeries", json);
         payload.addProperty("animate", animate);
         payload.addProperty("maintainZoom", maintainZoom);
+        payload.addProperty("syncProps", syncProps);
+        payload.addProperty("fetchResults", fetchResults);
+        if (fetchResults) {
+            payload.addProperty("url", url);
+        }
         fireEvent(OUTBOUND_EVENT_NAME, payload);
     }
 
     @ScriptCallable
-    @KeywordArgs(names = {"newOptions", "redrawPaths", "animate", "updateSyncedCharts", "maintainZoom"}, types = {PyDictionary.class, Boolean.class, Boolean.class, Boolean.class, Boolean.class})
+    @KeywordArgs(names = {"newOptions", "redrawPaths", "animate", "updateSyncedCharts", "maintainZoom", "syncProps"}, types = {PyDictionary.class, Boolean.class, Boolean.class, Boolean.class, Boolean.class, Boolean.class})
     public void updateOptions(PyObject[] pyArgs, String[] keywords) throws Exception {
-        PyArgumentMap argumentMap =
-                PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "updateOptions");
+        PyArgumentMap argumentMap = PyArgumentMap.interpretPyArgs(pyArgs, keywords, ApexChartModelDelegate.class, "updateOptions");
         PyDictionary newOptions = (PyDictionary) argumentMap.get("newOptions");
         Boolean redrawPaths = argumentMap.getBooleanArg("redrawPaths", false);
         Boolean animate = argumentMap.getBooleanArg("animate", true);
         Boolean updateSyncedCharts = argumentMap.getBooleanArg("updateSyncedCharts", true);
         Boolean maintainZoom = argumentMap.getBooleanArg("maintainZoom", false);
+        Boolean syncProps = argumentMap.getBooleanArg("syncProps", false);
 
         Gson gson = new Gson();
         log.debug("Calling updateOptions");
@@ -204,6 +226,7 @@ public class ApexChartModelDelegate extends ComponentModelDelegate {
         payload.addProperty("animate", animate);
         payload.addProperty("updateSyncedCharts", updateSyncedCharts);
         payload.addProperty("maintainZoom", maintainZoom);
+        payload.addProperty("syncProps", syncProps);
         fireEvent(OUTBOUND_EVENT_NAME, payload);
     }
 
@@ -216,6 +239,26 @@ public class ApexChartModelDelegate extends ComponentModelDelegate {
             JsonObject payload = message.getEvent();
             toggleSeriesReturn.set(payload.get("result").getAsBoolean());
             toggleSeriesWaiting.set(false);
+        }
+    }
+
+    private class ApexDataFetch implements FetchableCache.Fetchable {
+
+        final Session session;
+        final JsonElement json;
+
+        private ApexDataFetch(Session session, JsonElement json) {
+            this.session = session;
+            this.json = json;
+        }
+
+        @Override
+        public void fetch(HttpServletResponse response) throws IOException {
+            response.setContentType(RouteGroup.TYPE_JSON);
+            response.setCharacterEncoding(UTF_8.name());
+            try (OutputStreamWriter streamWriter = new OutputStreamWriter(response.getOutputStream(), UTF_8); JsonWriter jsonWriter = new JsonWriter(streamWriter)) {
+                Streams.write(json, jsonWriter);
+            }
         }
     }
 }
