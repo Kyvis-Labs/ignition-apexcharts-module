@@ -1,3 +1,5 @@
+THIS PROJECT HAS BEEN MIGRATED OVER TO [EMBR CHARTS](https://github.com/mussonindustrial/embr)
+
 # ApexCharts Module 
 
 An Ignition module that adds support for ApexCharts charting library as a Perspective component. The single Perspective component provides full support for leveraging all ApexCharts library through a simple flexible property model.
