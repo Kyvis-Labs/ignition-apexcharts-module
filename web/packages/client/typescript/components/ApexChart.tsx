@@ -142,21 +142,26 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
         const prevType = prevProps.props.type;
         const currentType = this.props.props.type;
 
-        if (prevOptions === newOptions && (prevSeries !== newSeries && newSeries !== currentSeries)) {
-            // options are not changed, just the series is changed
-            logger.debug("Series changed, updating");
-            this.currentSeries = this.props.props.series;
-            logger.debug("Series=" + JSON.stringify(this.currentSeries));
-            this.updateSeriesData();
-        } else if (prevOptions !== newOptions && newOptions !== currentOptions && prevType === currentType) {
-            // options have changed
-            logger.debug("Options changed, updating");
-            this.currentOptions = this.props.props.options;
-            logger.debug("Options=" + JSON.stringify(this.currentOptions));
-            this.updateOptions();
-        } else if (prevType !== currentType) {
+        if (prevType !== currentType) {
             logger.debug("Type changed " + prevType + " -> " + currentType + ", creating new chart");
+            this.currentOptions = this.props.props.options;
+            this.currentSeries = this.props.props.series;
             this.createChart();
+        } else {
+            if (prevOptions !== newOptions && newOptions !== currentOptions) {
+                // options have changed
+                logger.debug("Options changed, updating");
+                this.currentOptions = this.props.props.options;
+                logger.debug("Options=" + JSON.stringify(this.currentOptions));
+                this.updateOptions();
+            }
+
+            if (prevSeries !== newSeries && newSeries !== currentSeries) {
+                logger.debug("Series changed, updating");
+                this.currentSeries = this.props.props.series;
+                logger.debug("Series=" + JSON.stringify(this.currentSeries));
+                this.updateSeriesData();
+            }
         }
     }
 
