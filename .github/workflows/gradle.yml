@@ -53,6 +53,9 @@ jobs:
       run: |
         echo "${{ secrets.KYVIS_PASS }}" > ./sign.props
 
+    - name: Add minimatch
+      run: yarn add --dev @types/minimatch
+
     - name: Build with Gradle Wrapper
       run: ./gradlew signModule
 
