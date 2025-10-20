@@ -10,11 +10,11 @@ import com.inductiveautomation.ignition.common.script.builtin.PyArgumentMap;
 import com.inductiveautomation.ignition.gateway.dataroutes.RouteGroup;
 import com.inductiveautomation.perspective.gateway.api.*;
 import com.inductiveautomation.perspective.gateway.messages.EventFiredMsg;
+import jakarta.servlet.http.HttpServletResponse;
 import org.python.core.Py;
 import org.python.core.PyDictionary;
 import org.python.core.PyObject;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.List;

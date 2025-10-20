@@ -5,9 +5,9 @@
         "allowSyntheticDefaultImports": true,
         "baseUrl": ".",
         "paths" : {
-          "*": [
-              "*"
-          ]
+            "*": [
+                "*"
+            ]
         },
         "declaration": true,
         "declarationDir": "dist/typings/",
@@ -18,7 +18,7 @@
         "noEmitOnError": true,
         "noImplicitThis": true,
         "noImplicitReturns": false,
-        "noImplicitAny": true,
+        "noImplicitAny": false,
         "suppressImplicitAnyIndexErrors": true,
         "noUnusedLocals": true,
         "outDir": "dist/",

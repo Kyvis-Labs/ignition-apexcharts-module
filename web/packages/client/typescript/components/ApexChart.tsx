@@ -15,9 +15,9 @@ import {
     ReactResizeDetector
 } from '@inductiveautomation/perspective-client';
 import { bind } from 'bind-decorator';
-const objectScan = require('object-scan');
+import objectScan from 'object-scan';
 const cleanDeep = require('clean-deep');
-import ApexCharts from 'apexcharts/dist/apexcharts.min';
+import ApexCharts from 'apexcharts';
 
 export const COMPONENT_TYPE = "kyvislabs.display.apexchart";
 
@@ -82,7 +82,7 @@ export class ApexChartGatewayDelegate extends ComponentStoreDelegate {
                     } else if (functionToCall == "hideSeries") {
                         this.chart.chart.hideSeries(eventObject.seriesName);
                     } else if (functionToCall == "resetSeries") {
-                        this.chart.chart.resetSeries(eventObject.shouldUpdateChart, eventObject.shouldResetZoom);
+                        this.chart.chart.resetSeries();
                     } else if (functionToCall == "zoomX") {
                         this.chart.chart.zoomX(eventObject.start, eventObject.end);
                     } else if (functionToCall == "addPointAnnotation") {
@@ -109,7 +109,7 @@ export class ApexChartGatewayDelegate extends ComponentStoreDelegate {
 export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
 
     public chartRef: RefObject<HTMLDivElement> = React.createRef();
-    public chart: ApexCharts = null;
+    public chart: ApexCharts;
     public lastZoom: Array<any> = [];
     public currentSeries: any = null;
     public seriesOverride: boolean = false;
@@ -142,21 +142,26 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
         const prevType = prevProps.props.type;
         const currentType = this.props.props.type;
 
-        if (prevOptions === newOptions && (prevSeries !== newSeries && newSeries !== currentSeries)) {
-            // options are not changed, just the series is changed
-            logger.debug("Series changed, updating");
-            this.currentSeries = this.props.props.series;
-            logger.debug("Series=" + JSON.stringify(this.currentSeries));
-            this.updateSeriesData();
-        } else if (prevOptions !== newOptions && newOptions !== currentOptions && prevType === currentType) {
-            // options have changed
-            logger.debug("Options changed, updating");
-            this.currentOptions = this.props.props.options;
-            logger.debug("Options=" + JSON.stringify(this.currentOptions));
-            this.updateOptions();
-        } else if (prevType !== currentType) {
+        if (prevType !== currentType) {
             logger.debug("Type changed " + prevType + " -> " + currentType + ", creating new chart");
+            this.currentOptions = this.props.props.options;
+            this.currentSeries = this.props.props.series;
             this.createChart();
+        } else {
+            if (prevOptions !== newOptions && newOptions !== currentOptions) {
+                // options have changed
+                logger.debug("Options changed, updating");
+                this.currentOptions = this.props.props.options;
+                logger.debug("Options=" + JSON.stringify(this.currentOptions));
+                this.updateOptions();
+            }
+
+            if (prevSeries !== newSeries && newSeries !== currentSeries) {
+                logger.debug("Series changed, updating");
+                this.currentSeries = this.props.props.series;
+                logger.debug("Series=" + JSON.stringify(this.currentSeries));
+                this.updateSeriesData();
+            }
         }
     }
 
@@ -195,7 +200,7 @@ export class ApexChart extends Component<ComponentProps<ApexChartProps>, any> {
         this.chart.updateOptions(this.prepareOptions(this.currentOptions), redrawPaths, animate, updateSyncedCharts);
 
         if (!maintainZoom) {
-            this.chart.resetSeries(true, true);
+            this.chart.resetSeries();
             this.clearZoom();
         }
     }

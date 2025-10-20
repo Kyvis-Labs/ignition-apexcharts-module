@@ -5,10 +5,10 @@
         "allowSyntheticDefaultImports": true,
         "baseUrl": ".",
         "paths" : {
-          "*": [
-              "node_modules",
-              "../node_modules"
-          ]
+            "*": [
+                "node_modules",
+                "../node_modules"
+            ]
         },
         "declaration": true,
         "declarationDir": "dist/typings/",
@@ -20,7 +20,6 @@
         "noImplicitThis": true,
         "noImplicitReturns": false,
         "noImplicitAny": false,
-        "esModuleInterop": true,
         "suppressImplicitAnyIndexErrors": true,
         "noUnusedLocals": true,
         "outDir": "dist/",
