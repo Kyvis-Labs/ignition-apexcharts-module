@@ -51,7 +51,7 @@ jobs:
 
     - name: Download Sign Props
       run: |
-        echo "${{ secrets.KYVIS_PASS }}" > ./sign.props
+        echo "${{ secrets.KYVIS_PASS }}" >> ./gradle.properties
 
     - name: Add minimatch
       run: yarn add --dev @types/minimatch
