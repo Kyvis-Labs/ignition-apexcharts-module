@@ -59,10 +59,13 @@ jobs:
 
     - name: Download Sign Props
       run: |
-        echo "${{ secrets.KYVIS_PASS }}" > ./sign.props
+        echo "${{ secrets.KYVIS_PASS }}" >> ./gradle.properties
+
+    - name: Add minimatch
+      run: yarn add --dev @types/minimatch
 
     - name: Build with Gradle Wrapper
-      run: ./gradlew buildSignedModule
+      run: ./gradlew signModule
 
     - name: Add Version to Signed Module
       run: mv ./build/apexcharts.modl ./build/ApexCharts-${{ github.event.inputs.version }}.modl
