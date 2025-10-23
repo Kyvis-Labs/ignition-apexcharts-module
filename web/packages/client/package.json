@@ -16,7 +16,7 @@
         "axios": "^0.28.0",
         "react": "16.14.0",
         "react-dom": "16.14.0",
-        "apexcharts": "5.3.5",
+        "apexcharts": "3.54.1",
         "object-scan": "20.0.1",
         "clean-deep": "3.4.0"
     },
