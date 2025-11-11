@@ -17,7 +17,7 @@ import {
 import { bind } from 'bind-decorator';
 import objectScan from 'object-scan';
 const cleanDeep = require('clean-deep');
-import ApexCharts from 'apexcharts';
+import ApexCharts from 'apexcharts/dist/apexcharts.min';
 
 export const COMPONENT_TYPE = "kyvislabs.display.apexchart";
 
