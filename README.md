@@ -1,4 +1,25 @@
-THIS PROJECT HAS BEEN MIGRATED OVER TO [EMBR CHARTS](https://github.com/mussonindustrial/embr)
+> [!IMPORTANT]
+> ### Project Status: Migrated
+>
+> This module is no longer actively maintained.
+>
+> The ApexCharts component for Ignition Perspective is now provided by **Embr Charts**:  
+> https://github.com/mussonindustrial/embr
+>
+> **What this means for Ignition users:**
+>
+> - **Embr Charts is the actively supported module** and should be used for all new projects.
+> - It is a **drop-in replacement** for this module, designed to work with existing views and configurations.
+> - Ongoing fixes, improvements, and compatibility updates for newer Ignition versions are only being made in Embr Charts.
+>
+> **Recommended next step:**
+>
+> If you are currently using this module in a project, migrating to Embr Charts will ensure continued support.
+> *Migration steps: uninstall this module, install Embr Charts, and reopen your projects. Existing ApexCharts components will continue to function without reconfiguration.*
+>
+> **For contributors:**
+>
+> Please direct all issues, feature requests, and pull requests to the Embr Charts repository. This repository will remain available for reference but is no longer receiving updates.
 
 # ApexCharts Module 
 
